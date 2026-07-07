@@ -1,0 +1,1573 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>信息化项目预算与流程管理系统</title>
+    <link rel="stylesheet" href="./styles.css?v=20260705-10" />
+  </head>
+  <body data-mode="applicant" data-screen="portal">
+    <div class="app">
+      <aside class="sidebar" aria-label="业务导航">
+        <div class="school-brand">
+          <img src="./assets/school-logo.png" alt="上海电机学院" />
+        </div>
+        <div class="sidebar-heading">
+          <span id="navEyebrow">办事大厅</span>
+          <strong>信息化项目管理</strong>
+          <small id="navTitle">办事大厅</small>
+        </div>
+
+        <nav class="nav-list applicant-nav">
+          <button class="nav-item is-active" type="button" data-screen="portal">
+            <img src="./assets/nav-home.png" alt="" /><span>首页</span>
+          </button>
+          <button class="nav-item" type="button" data-screen="applyWizard">
+            <img src="./assets/nav-apply.png" alt="" /><span>项目申报</span>
+          </button>
+          <button class="nav-item" type="button" data-screen="myProjects">
+            <img src="./assets/nav-my.png" alt="" /><span>我的项目</span>
+          </button>
+          <button class="nav-item" type="button" data-screen="templates">
+            <img src="./assets/nav-template.png" alt="" /><span>模板中心</span>
+          </button>
+        </nav>
+
+        <nav class="nav-list admin-nav">
+          <button class="nav-item" type="button" data-screen="leader">
+            <img src="./assets/nav-home.png" alt="" /><span>首页</span>
+          </button>
+          <button class="nav-item" type="button" data-screen="manage" data-manage-open="business">
+            <img src="./assets/icon-progress.png" alt="" /><span>项目台账</span>
+          </button>
+
+          <div class="nav-group is-open" data-nav-group="process">
+            <button class="nav-group-title" type="button" data-screen="manage" data-manage-open="processCreate" data-nav-toggle="process" aria-expanded="true" aria-controls="processNavSublist">
+              <img src="./assets/icon-calendar.png" alt="" /><span>项目过程管理</span><b>⌃</b>
+            </button>
+            <div class="nav-sublist" id="processNavSublist">
+              <button class="nav-subitem" type="button" data-screen="manage" data-manage-open="processCreate">新建立项</button>
+              <button class="nav-subitem" type="button" data-screen="manage" data-manage-open="processReview">立项审核</button>
+              <button class="nav-subitem" type="button" data-screen="manage" data-manage-open="processPurchase">新建采购</button>
+              <button class="nav-subitem" type="button" data-screen="manage" data-manage-open="processImplement">实施</button>
+              <button class="nav-subitem" type="button" data-screen="manage" data-manage-open="processTrial">试运行</button>
+              <button class="nav-subitem" type="button" data-screen="manage" data-manage-open="processAcceptance">验收</button>
+              <button class="nav-subitem" type="button" data-screen="manage" data-manage-open="processAcceptanceReview">验收审核</button>
+              <button class="nav-subitem" type="button" data-screen="manage" data-manage-open="processArchive">归档</button>
+              <button class="nav-subitem" type="button" data-screen="manage" data-manage-open="processRefund">退金</button>
+              <button class="nav-subitem" type="button" data-screen="manage" data-manage-open="processClose">结项</button>
+            </div>
+          </div>
+
+          <button class="nav-item" type="button" data-screen="budget">
+            <img src="./assets/icon-database.png" alt="" /><span>预算管理</span>
+          </button>
+          <button class="nav-item" type="button" data-screen="manage" data-manage-open="docs">
+            <img src="./assets/icon-material.png" alt="" /><span>资料管理</span>
+          </button>
+          <button class="nav-item" type="button" data-screen="reminders">
+            <img src="./assets/icon-bell.png" alt="" /><span>事务提醒</span>
+          </button>
+          <div class="nav-group is-open" data-nav-group="system">
+            <button class="nav-group-title" type="button" data-screen="systemRoles" data-system-root="system" data-nav-toggle="system" aria-expanded="true" aria-controls="systemNavSublist">
+              <img src="./assets/icon-user.png" alt="" /><span>系统管理</span><b>⌃</b>
+            </button>
+            <div class="nav-sublist" id="systemNavSublist">
+              <button class="nav-subitem" type="button" data-screen="systemRoles">角色管理</button>
+              <button class="nav-subitem" type="button" data-screen="systemFlow">流程配置管理</button>
+              <button class="nav-subitem" type="button" data-screen="systemFields">字段表管理</button>
+            </div>
+          </div>
+        </nav>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div class="admin-breadcrumb">
+            <span class="menu-mark">☰</span>
+            <span>首页</span>
+            <i>/</i>
+            <span>项目管理</span>
+            <i>/</i>
+            <strong id="adminBreadcrumbCurrent">项目管理</strong>
+          </div>
+          <div class="top-actions">
+            <button class="top-primary admin-only" type="button" data-action="exportReport">导出列表</button>
+            <button class="notice-bell" type="button" data-action="readNotice" aria-label="通知">●</button>
+            <div class="user-menu">
+              <button class="avatar-btn" type="button" id="avatarButton" aria-expanded="false">
+                <span class="avatar">张</span>
+                <span>张老师</span>
+                <i>⌄</i>
+              </button>
+              <div class="avatar-popover" id="avatarPopover">
+                <button type="button" id="enterAdmin">进入管理后台</button>
+                <button type="button" id="backPortal">返回办事大厅</button>
+                <span>已开通管理权限</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <section class="page-head">
+          <div>
+            <p id="pageTitle">办事大厅</p>
+            <h1 id="pageHeading">您好，张老师！</h1>
+            <span class="portal-subtitle">欢迎使用信息化项目申报办事大厅</span>
+            <div class="page-action-row applicant-only">
+              <label class="top-search page-search">
+                <span class="search-mark">⌕</span>
+                <input id="globalSearch" type="search" placeholder="搜索项目名称、申报模板、项目负责人" />
+              </label>
+              <button class="top-primary" type="button" data-action="openApplyWizard">＋ 新建申报</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen is-active" id="portal">
+          <section class="quick-panel">
+            <div class="section-title"><i></i><h2>快捷功能</h2></div>
+            <div class="quick-actions">
+              <button class="todo-summary action-todo" type="button" data-action="openTodoCenter">
+                <img src="./assets/icon-bell.png" alt="" />
+                <strong>2</strong>
+                <span>项待办<br /><em>您有 2 项待处理任务</em></span>
+                <b>›</b>
+              </button>
+              <button class="action-card action-apply" type="button" data-action="openApplyWizard">
+                <img src="./assets/icon-apply.png" alt="" />
+                <span><b>项目申报</b><em>从零创建信息化项目申请</em></span>
+                <strong>›</strong>
+              </button>
+              <button class="action-card action-progress" type="button" data-screen-link="progressCenter">
+                <img src="./assets/icon-progress.png" alt="" />
+                <span><b>项目进度</b><em>按项目查看节点与材料状态</em></span>
+                <strong>›</strong>
+              </button>
+              <button class="action-card action-template" type="button" data-screen-link="templates">
+                <img src="./assets/icon-template.png" alt="" />
+                <span><b>资料准备</b><em>要求、清单、模板一次查</em></span>
+                <strong>›</strong>
+              </button>
+            </div>
+          </section>
+
+          <div class="portal-grid">
+            <section class="panel todo-panel">
+              <div class="panel-head">
+                <h2>待办事项 <span>2</span></h2>
+                <button class="text-btn" type="button" data-action="openTodoCenter">全部待办 ›</button>
+              </div>
+              <div class="todo-panel-tools">
+                <input type="search" placeholder="搜索项目、材料、节点" />
+                <select><option>全部类型</option><option>缺材料</option><option>退回修改</option><option>可提交</option></select>
+                <button class="ghost-btn" type="button" data-action="quickProcess">办理选中</button>
+              </div>
+              <div class="todo-list" id="applicantTodoList"></div>
+              <div class="todo-center-pagination portal-todo-pagination">
+                <span id="portalTodoPageInfo">共 0 条</span>
+                <label>每页
+                  <select id="portalTodoPageSize">
+                    <option value="3">3</option>
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                  </select>
+                </label>
+                <div class="portal-todo-pages" id="portalTodoPageButtons" aria-label="待办分页"></div>
+              </div>
+            </section>
+
+            <section class="panel notice-panel">
+              <div class="panel-head">
+                <h2>通知公告</h2>
+                <button class="text-btn" type="button" data-screen-link="noticeCenter">全部通知 ›</button>
+              </div>
+              <div class="notice-tools">
+                <input type="search" placeholder="搜索通知标题或关键词" />
+                <button class="is-active" type="button">未读</button>
+                <button type="button">已读</button>
+              </div>
+              <div class="notice-list">
+                <article data-action="noticeDetail" role="button" tabindex="0">
+                  <img src="./assets/icon-bell.png" alt="" />
+                  <div>
+                    <span>申报通知</span>
+                    <strong>2026 年信息化项目申报已开放</strong>
+                    <p>全年可申报，提交前请先按模板准备建设必要性、预算测算和团队角色。</p>
+                  </div>
+                  <time>07-01<b class="notice-state unread">未读</b></time>
+                </article>
+                <article data-action="noticeDetail" role="button" tabindex="0">
+                  <img src="./assets/icon-calendar.png" alt="" />
+                  <div>
+                    <span>材料通知</span>
+                    <strong>申报材料模板与预算口径已更新</strong>
+                    <p>项目申报书、预算测算表、采购论证和归档清单已按新口径发布。</p>
+                  </div>
+                  <time>06-28<b class="notice-state read">已读</b></time>
+                </article>
+              </div>
+              <div class="notice-pagination">
+                <span>共 12 条</span>
+                <button class="is-active" type="button">1</button>
+                <button type="button">2</button>
+                <button type="button">›</button>
+              </div>
+            </section>
+
+            <section class="panel calendar-panel">
+              <div class="panel-head">
+                <h2>项目日历</h2>
+                <div class="calendar-tools">
+                  <button type="button">今日</button>
+                  <button type="button">‹</button>
+                  <button type="button">›</button>
+                  <button class="is-active" type="button" data-calendar-view="month">月视图</button>
+                  <button type="button" data-calendar-view="week">周视图</button>
+                </div>
+              </div>
+              <h3>2024年5月</h3>
+              <div class="calendar-grid is-active" data-calendar-panel="month">
+                <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+                <button class="muted" type="button">29</button><button class="muted" type="button">30</button><button type="button">1</button><button type="button">2</button><button class="has-event green" type="button" data-calendar-event="material">3<em>材料截止</em></button><button type="button">4</button><button type="button">5</button>
+                <button type="button">6</button><button type="button">7</button><button type="button">8</button><button class="has-event blue" type="button" data-calendar-event="review">9<em>立项评审会</em></button><button type="button">10</button><button type="button">11</button><button type="button">12</button>
+                <button type="button">13</button><button type="button">14</button><button type="button">15</button><button class="has-event purple" type="button" data-calendar-event="midterm">16<em>中期检查</em></button><button type="button">17</button><button type="button">18</button><button type="button">19</button>
+                <button type="button">20</button><button type="button">21</button><button class="is-current" type="button">22</button><button type="button">23</button><button class="has-event orange" type="button" data-calendar-event="acceptance">24<em>验收截止</em></button><button type="button">25</button><button type="button">26</button>
+                <button type="button">27</button><button type="button">28</button><button type="button">29</button><button type="button">30</button><button type="button">31</button><button class="muted" type="button">1</button><button class="muted" type="button">2</button>
+              </div>
+              <div class="week-list" data-calendar-panel="week">
+                <article role="button" tabindex="0" data-calendar-event="material"><b>周三</b><span>补交预算测算表</span><em>10:00</em></article>
+                <article role="button" tabindex="0" data-calendar-event="review"><b>周四</b><span>立项评审会</span><em>14:00</em></article>
+                <article role="button" tabindex="0" data-calendar-event="purchase"><b>周五</b><span>采购论证材料截止</span><em>17:00</em></article>
+              </div>
+              <div class="calendar-event-popover" id="calendarEventPopover" aria-live="polite">
+                <span id="calendarEventTag">项目节点</span>
+                <strong id="calendarEventTitle">立项评审会</strong>
+                <p id="calendarEventDesc">网络安全态势感知平台进入立项评审，请确认申报书、预算测算和团队角色。</p>
+                <button class="plain-btn" type="button" data-action="calendarDetail">查看详情</button>
+              </div>
+              <div class="calendar-legend"><span class="blue"></span>立项评审会 <span class="green"></span>材料截止 <span class="orange"></span>验收截止 <span class="purple"></span>中期检查</div>
+            </section>
+          </div>
+        </section>
+
+        <section class="screen" id="noticeCenter">
+          <section class="panel notice-center-panel">
+            <div class="panel-head">
+              <h2>通知公告 <span>12</span></h2>
+              <button class="ghost-btn" type="button" data-action="readNotice">发布口径</button>
+            </div>
+            <div class="notice-center-filters">
+              <label><span>关键词</span><input type="search" placeholder="通知标题、材料名称、项目节点" /></label>
+              <label><span>通知类型</span><select><option>全部</option><option>申报通知</option><option>材料通知</option><option>评审通知</option><option>归档通知</option></select></label>
+              <label><span>阅读状态</span><select><option>全部</option><option>未读</option><option>已读</option></select></label>
+              <button class="primary-btn" type="button" data-action="searchList">查询</button>
+              <button class="ghost-btn" type="button" data-action="exportReport">导出</button>
+            </div>
+            <div class="notice-center-list">
+              <article class="notice-center-row is-unread">
+                <img src="./assets/icon-bell.png" alt="" />
+                <div>
+                  <span>申报通知</span>
+                  <strong>2026 年信息化项目申报已开放</strong>
+                  <p>全年可申报，提交前请先准备建设必要性、预算测算和团队角色。</p>
+                </div>
+                <time>2026-07-01</time>
+                <b class="notice-state unread">未读</b>
+                <button class="plain-btn" type="button" data-action="viewDetail" data-detail="noticeDetail">查看</button>
+              </article>
+              <article class="notice-center-row">
+                <img src="./assets/icon-calendar.png" alt="" />
+                <div>
+                  <span>材料通知</span>
+                  <strong>申报材料模板与预算口径已更新</strong>
+                  <p>项目申报书、预算测算表、采购论证和归档清单已按新口径发布。</p>
+                </div>
+                <time>2026-06-28</time>
+                <b class="notice-state read">已读</b>
+                <button class="plain-btn" type="button" data-action="viewDetail" data-detail="noticeDetail">查看</button>
+              </article>
+              <article class="notice-center-row is-unread">
+                <img src="./assets/icon-progress.png" alt="" />
+                <div>
+                  <span>评审通知</span>
+                  <strong>周四 14 点立项会排期更新</strong>
+                  <p>网络安全态势感知平台、统一身份认证平台升级进入本批评审。</p>
+                </div>
+                <time>2026-06-24</time>
+                <b class="notice-state unread">未读</b>
+                <button class="plain-btn" type="button" data-action="viewDetail" data-detail="noticeDetail">查看</button>
+              </article>
+              <article class="notice-center-row">
+                <img src="./assets/icon-template.png" alt="" />
+                <div>
+                  <span>归档通知</span>
+                  <strong>验收通过项目请补齐归档材料</strong>
+                  <p>验收意见、签字页、归档移交清单缺项会自动生成待办。</p>
+                </div>
+                <time>2026-06-18</time>
+                <b class="notice-state read">已读</b>
+                <button class="plain-btn" type="button" data-action="viewDetail" data-detail="noticeDetail">查看</button>
+              </article>
+            </div>
+            <div class="notice-center-pagination">
+              <span>共 12 条</span>
+              <button class="is-active" type="button">1</button>
+              <button type="button">2</button>
+              <button type="button">3</button>
+              <button type="button">›</button>
+            </div>
+          </section>
+        </section>
+
+        <section class="screen" id="todoCenter">
+          <section class="panel todo-center-panel">
+            <div class="panel-head">
+              <h2>待办中心 <span>3</span></h2>
+            </div>
+            <div class="todo-center-filters">
+              <label><span>关键词</span><input type="search" placeholder="项目名称、材料名称、节点" /></label>
+              <label><span>待办类型</span><select><option>全部</option><option>补交材料</option><option>退回修改</option><option>验收申请</option></select></label>
+              <label><span>截止时间</span><select><option>全部</option><option>今日到期</option><option>7 天内</option><option>已逾期</option></select></label>
+              <label><span>处理状态</span><select><option>未处理</option><option>已处理</option></select></label>
+              <button class="primary-btn" type="button" data-action="searchList">查询</button>
+            </div>
+            <div class="todo-table" role="table" aria-label="待办列表">
+              <div class="todo-table-row todo-table-head" role="row">
+                <span>项目名称</span>
+                <span>预算来源</span>
+                <span>申报部门</span>
+                <span>申报人</span>
+                <span>申报时间</span>
+                <span>进度</span>
+                <span>操作</span>
+              </div>
+              <div class="todo-table-row" role="row">
+                <strong>网络安全态势感知平台<em>补交预算测算表</em></strong>
+                <span>信息化建设专项</span>
+                <span>信息化办公室</span>
+                <span>张工</span>
+                <span>2024-05-10</span>
+                <span><b class="status amber">缺材料</b><i class="mini-progress" style="--w: 32%"></i></span>
+                <span class="row-actions"><button class="ghost-btn" type="button" data-action="todoDetail">详情</button><button class="plain-btn" type="button" data-action="quickProcess">办理</button></span>
+              </div>
+              <div class="todo-table-row" role="row">
+                <strong>数据中心存储扩容<em>预算测算表被退回</em></strong>
+                <span>基础设施更新预算</span>
+                <span>信息化办公室</span>
+                <span>王工</span>
+                <span>2024-05-12</span>
+                <span><b class="status amber">退回</b><i class="mini-progress" style="--w: 24%"></i></span>
+                <span class="row-actions"><button class="ghost-btn" type="button" data-action="todoDetail">详情</button><button class="plain-btn" type="button" data-action="quickProcess">办理</button></span>
+              </div>
+              <div class="todo-table-row" role="row">
+                <strong>统一身份认证平台升级<em>试运行报告可提交</em></strong>
+                <span>网络安全与数据治理</span>
+                <span>信息化办公室</span>
+                <span>李工</span>
+                <span>2024-06-03</span>
+                <span><b class="status green">可提交</b><i class="mini-progress" style="--w: 68%"></i></span>
+                <span class="row-actions"><button class="ghost-btn" type="button" data-action="projectProgress">进度</button><button class="plain-btn" type="button" data-action="quickProcess">办理</button></span>
+              </div>
+            </div>
+            <div class="todo-center-pagination">
+              <span>共 18 条待办</span>
+              <label>每页
+                <select>
+                  <option>10 条</option>
+                  <option>20 条</option>
+                  <option>50 条</option>
+                </select>
+              </label>
+              <button class="ghost-btn" type="button">上一页</button>
+              <button class="is-active" type="button">1</button>
+              <button type="button">2</button>
+              <button type="button">3</button>
+              <button class="ghost-btn" type="button">下一页</button>
+            </div>
+          </section>
+        </section>
+
+        <section class="screen" id="progressCenter">
+          <section class="progress-track-page">
+            <div class="progress-track-head">
+              <div>
+                <span>进度跟踪</span>
+                <h2>项目全流程进度</h2>
+                <p>按项目查看当前节点、材料状态和下一步事项，方便申请人确认自己还需要做什么。</p>
+              </div>
+              <button class="ghost-btn" type="button" data-action="exportReport">导出进度</button>
+            </div>
+
+            <div class="progress-metrics-strip">
+              <article><span>跟踪项目</span><strong>4</strong><em>当前页项目</em></article>
+              <article><span>需补材料</span><strong>2</strong><em>优先处理</em></article>
+              <article><span>近 7 日更新</span><strong>3</strong><em>含评审与验收</em></article>
+              <article><span>平均进度</span><strong>50%</strong><em>按节点折算</em></article>
+            </div>
+
+            <section class="progress-query-panel">
+              <div class="progress-query-grid">
+                <label><span>项目名称</span><input type="search" placeholder="搜索项目名称" /></label>
+                <label><span>申报部门</span><input type="search" placeholder="输入部门" /></label>
+                <label><span>申报人</span><input type="search" placeholder="输入姓名" /></label>
+                <label><span>申报时间</span><input type="text" placeholder="开始日期 ~ 结束日期" /></label>
+                <label><span>当前阶段</span><select><option>全部</option><option>新建立项</option><option>立项审核</option><option>新建采购</option><option>实施</option><option>试运行</option><option>验收</option><option>验收审核</option><option>归档</option><option>退金</option><option>结项</option></select></label>
+                <label><span>材料状态</span><select><option>全部</option><option>缺材料</option><option>已齐</option><option>待确认</option></select></label>
+              </div>
+              <div class="progress-query-actions">
+                <button class="primary-btn" type="button" data-action="searchList">查询</button>
+                <button class="ghost-btn" type="button" data-action="resetFilter">重置</button>
+              </div>
+            </section>
+
+            <section class="progress-project-list" aria-label="项目进度列表">
+              <article class="progress-project-card">
+                <div class="progress-project-main">
+                  <div class="progress-project-title">
+                    <strong>网络安全态势感知平台</strong>
+                    <span>信息化办公室 · 张工 · 更新 06-28</span>
+                  </div>
+                  <div class="progress-node-rail">
+                    <span class="is-done">新建立项</span>
+                    <span class="is-current">立项审核</span>
+                    <span>新建采购</span>
+                    <span>实施</span>
+                    <span>验收归档</span>
+                  </div>
+                  <p>待补交预算测算表，补齐后进入预算匹配和立项确认。</p>
+                </div>
+                <div class="progress-project-side">
+                  <span class="status amber">缺材料</span>
+                  <b>32%</b>
+                  <i class="mini-progress" style="--w: 32%"></i>
+                  <div class="row-actions">
+                    <button class="plain-btn" type="button" data-action="projectProgress">进度</button>
+                    <button class="ghost-btn" type="button" data-action="applicationDetail">详情</button>
+                  </div>
+                </div>
+              </article>
+
+              <article class="progress-project-card">
+                <div class="progress-project-main">
+                  <div class="progress-project-title">
+                    <strong>统一身份认证平台升级</strong>
+                    <span>信息化办公室 · 李工 · 更新 06-24</span>
+                  </div>
+                  <div class="progress-node-rail">
+                    <span class="is-done">新建立项</span>
+                    <span class="is-done">立项审核</span>
+                    <span class="is-done">新建采购</span>
+                    <span class="is-current">试运行</span>
+                    <span>验收归档</span>
+                  </div>
+                  <p>试运行报告可提交，提交后进入验收材料准备。</p>
+                </div>
+                <div class="progress-project-side">
+                  <span class="status green">可提交</span>
+                  <b>68%</b>
+                  <i class="mini-progress" style="--w: 68%"></i>
+                  <div class="row-actions">
+                    <button class="plain-btn" type="button" data-action="projectProgress">进度</button>
+                    <button class="ghost-btn" type="button" data-action="applicationDetail">详情</button>
+                  </div>
+                </div>
+              </article>
+
+              <article class="progress-project-card">
+                <div class="progress-project-main">
+                  <div class="progress-project-title">
+                    <strong>数据中心存储扩容</strong>
+                    <span>信息化办公室 · 王工 · 更新 06-18</span>
+                  </div>
+                  <div class="progress-node-rail">
+                    <span class="is-done">新建立项</span>
+                    <span class="is-current">立项审核</span>
+                    <span>新建采购</span>
+                    <span>实施</span>
+                    <span>验收归档</span>
+                  </div>
+                  <p>预算测算表被退回，需要按年度口径补充资金来源。</p>
+                </div>
+                <div class="progress-project-side">
+                  <span class="status amber">退回修改</span>
+                  <b>24%</b>
+                  <i class="mini-progress" style="--w: 24%"></i>
+                  <div class="row-actions">
+                    <button class="plain-btn" type="button" data-action="projectProgress">进度</button>
+                    <button class="ghost-btn" type="button" data-action="applicationDetail">详情</button>
+                  </div>
+                </div>
+              </article>
+
+              <article class="progress-project-card">
+                <div class="progress-project-main">
+                  <div class="progress-project-title">
+                    <strong>日志审计平台建设</strong>
+                    <span>网络中心 · 赵工 · 更新 06-12</span>
+                  </div>
+                  <div class="progress-node-rail">
+                    <span class="is-done">新建立项</span>
+                    <span class="is-done">立项审核</span>
+                    <span class="is-done">新建采购</span>
+                    <span class="is-done">实施</span>
+                    <span class="is-current">验收</span>
+                  </div>
+                  <p>阶段报告已上传，等待验收审核意见。</p>
+                </div>
+                <div class="progress-project-side">
+                  <span class="status blue">验收中</span>
+                  <b>76%</b>
+                  <i class="mini-progress" style="--w: 76%"></i>
+                  <div class="row-actions">
+                    <button class="plain-btn" type="button" data-action="projectProgress">进度</button>
+                    <button class="ghost-btn" type="button" data-action="applicationDetail">详情</button>
+                  </div>
+                </div>
+              </article>
+            </section>
+
+            <div class="todo-center-pagination">
+              <span>共 4 个进行中项目</span>
+              <button class="is-active" type="button">1</button>
+            </div>
+          </section>
+        </section>
+
+        <section class="screen" id="applyWizard">
+          <section class="panel form-panel">
+            <div class="wizard-steps" id="wizardSteps">
+              <button class="is-active" type="button" data-wizard-step="0">基础信息</button>
+              <button type="button" data-wizard-step="1">建设说明</button>
+              <button type="button" data-wizard-step="2">团队计划</button>
+              <button type="button" data-wizard-step="3">预算材料</button>
+              <button type="button" data-wizard-step="4">确认提交</button>
+            </div>
+            <div class="wizard-context" id="wizardContext">
+              <span>第 1 / 5 步</span>
+              <strong>先把项目身份说清楚</strong>
+              <em>下一步：建设说明</em>
+            </div>
+
+            <section class="wizard-pane is-active" data-wizard-panel="0">
+              <div class="panel-head compact-head"><h2>基础信息</h2><span class="pill">草稿</span></div>
+              <div class="form-grid form-grid-3">
+                <label><span>申报年度</span><input value="2026" /></label>
+                <label><span>* 申请批次</span><select><option>2026 年第一批</option><option>2026 年第二批</option><option>临时申报</option></select></label>
+                <label><span>* 项目名称</span><input value="网络安全态势感知平台" /></label>
+                <label><span>* 项目类别</span><select><option>应用系统</option><option>基础设施</option><option>网络安全</option><option>数据治理</option></select></label>
+                <label><span>申报编号</span><input value="自动生成" disabled /></label>
+                <label><span>立项日期</span><input value="2026-07-01" /></label>
+                <label><span>* 项目属性</span><select><option>新建</option><option>升级改造</option><option>续建</option></select></label>
+                <label><span>* 申报部门</span><select><option>信息化办公室</option><option>教务处</option><option>图文信息中心</option></select></label>
+                <label><span>* 归口部门</span><select><option>信息化办公室</option><option>网络中心</option></select></label>
+                <label><span>* 使用部门</span><select><option>全校</option><option>信息化办公室</option><option>教务处</option><option>学生处</option></select></label>
+                <label><span>* 项目负责人</span><input value="张工" /></label>
+                <label><span>联系电话</span><input value="138****5678" /></label>
+                <label><span>负责人邮箱</span><input value="zhangg@sdju.edu.cn" /></label>
+                <label><span>密级</span><select><option>非涉密</option><option>内部</option></select></label>
+                <label><span>项目来源</span><select><option>部门申报</option><option>年度规划</option><option>安全整改</option><option>领导交办</option></select></label>
+                <label><span>建设类型</span><select><option>软件平台</option><option>硬件设备</option><option>网络安全</option><option>集成服务</option></select></label>
+                <label><span>项目状态</span><input value="草稿" disabled /></label>
+                <label class="radio-field"><span>* 业务是否跨部门</span><em><input type="radio" name="crossDept" checked /> 是</em><em><input type="radio" name="crossDept" /> 否</em></label>
+                <label class="radio-field"><span>是否涉及采购</span><em><input type="radio" name="needPurchase" checked /> 是</em><em><input type="radio" name="needPurchase" /> 否</em></label>
+                <label><span>* 建设周期</span><input value="2026-07 至 2026-12" /></label>
+                <label><span>建议优先级</span><select><option>P0 紧急</option><option>P1 重要</option><option>P2 常规</option></select></label>
+              </div>
+            </section>
+
+            <section class="wizard-pane" data-wizard-panel="1">
+              <div class="panel-head compact-head"><h2>建设说明</h2><span class="pill blue">必填</span></div>
+              <div class="form-grid form-grid-2">
+                <label><span>* 建设背景</span><textarea>学校网络资产、业务系统和安全设备数量持续增加，现有告警分散在多个平台。</textarea></label>
+                <label><span>* 建设目标</span><textarea>提升学校网络安全态势感知、告警分析和风险闭环处置能力。</textarea></label>
+                <label><span>* 建设必要性</span><textarea>现有安全设备日志分散，风险发现、处置和审计材料整理成本高，需要统一平台支撑等保整改和日常运维。</textarea></label>
+                <label><span>* 建设内容</span><textarea>建设资产管理、日志接入、告警关联、风险评分、整改闭环和报表导出能力。</textarea></label>
+                <label><span>现状问题</span><textarea>风险发现依赖人工巡检，材料补交和整改记录散落在不同表格与文件夹。</textarea></label>
+                <label><span>建设范围</span><input value="校园网、数据中心、统一身份认证及核心业务系统" /></label>
+                <label><span>服务对象</span><input value="全校师生、信息化运维人员" /></label>
+                <label><span>关联业务系统</span><input value="统一身份认证、校园网、日志审计、数据中心" /></label>
+                <label><span>涉及数据/接口</span><input value="资产台账、网络日志、账号日志、告警事件" /></label>
+                <label><span>安全合规要求</span><input value="等保整改、日志留存、审计追踪、权限控制" /></label>
+                <label><span>预期成效</span><textarea>实现资产探测、告警关联、风险评分、整改留痕和验收材料归集。</textarea></label>
+                <label><span>风险说明</span><textarea>需协调网络设备、服务器日志接入，建设期间不影响现有业务运行。</textarea></label>
+              </div>
+            </section>
+
+            <section class="wizard-pane" data-wizard-panel="2">
+              <div class="panel-head compact-head"><h2>团队计划</h2><span class="pill blue">团队角色必填</span></div>
+              <div class="team-plan-guide">
+                <article><span>谁负责</span><strong>项目负责人先确认</strong><em>后续待办默认推送给负责人</em></article>
+                <article><span>谁确认</span><strong>归口部门负责人必填</strong><em>立项审核前确认建设必要性</em></article>
+                <article><span>谁配合</span><strong>实施联系人跟进材料</strong><em>采购、试运行、验收阶段持续补充</em></article>
+              </div>
+              <section class="repeat-section team-section">
+                <div class="repeat-section-title">
+                  <h3>团队角色</h3>
+                  <button class="repeat-collapse" type="button" aria-label="收起团队角色">⌃</button>
+                </div>
+                <div class="repeat-section-body">
+                  <div class="repeat-section-toolbar">
+                    <div>
+                      <strong>团队角色明细</strong>
+                      <span>维护项目负责人、归口部门负责人和实施联系人，支持新增、编辑、删除和模板导入。</span>
+                    </div>
+                    <div>
+                      <button class="ghost-btn" type="button" data-action="downloadTemplate">模板导入</button>
+                      <button class="primary-btn" type="button" data-action="addTeamRole">新增团队角色</button>
+                    </div>
+                  </div>
+                  <div class="team-role-cards repeat-table repeat-table-team">
+                    <div class="repeat-table-row repeat-table-head"><span>明细</span><span>团队角色</span><span>姓名</span><span>部门</span><span>邮箱</span><span>手机</span><span>操作</span></div>
+                    <div class="repeat-table-row"><strong>角色 1</strong><span>项目负责人</span><span>张工</span><span>信息化办公室</span><span>zhangg@sdju.edu.cn</span><span>138****5678</span><span class="repeat-actions"><button type="button" data-action="teamDetail">详情</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
+                    <div class="repeat-table-row"><strong>角色 2</strong><span>归口部门负责人</span><span>李老师</span><span>信息化办公室</span><span>li@sdju.edu.cn</span><span>136****2330</span><span class="repeat-actions"><button type="button" data-action="teamDetail">详情</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
+                    <div class="repeat-table-row"><strong>角色 3</strong><span>实施联系人</span><span>王工</span><span>网络中心</span><span>wangg@sdju.edu.cn</span><span>139****1120</span><span class="repeat-actions"><button type="button" data-action="teamDetail">详情</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
+                  </div>
+                </div>
+              </section>
+              <section class="repeat-section milestone-repeat-section">
+                <div class="repeat-section-title">
+                  <h3>项目计划里程碑</h3>
+                  <button class="repeat-collapse" type="button" aria-label="收起项目计划里程碑">⌃</button>
+                </div>
+                <div class="repeat-section-body">
+                  <div class="repeat-section-toolbar">
+                    <div>
+                      <strong>项目计划里程碑明细</strong>
+                      <span>按建设周期维护关键节点，后续会进入进度和提醒。</span>
+                    </div>
+                    <div>
+                      <button class="ghost-btn" type="button" data-action="downloadTemplate">模板导入</button>
+                      <button class="primary-btn" type="button" data-action="addMilestone">新增里程碑</button>
+                    </div>
+                  </div>
+                  <div class="mini-table milestone-table repeat-table repeat-table-milestone">
+                    <div class="repeat-table-row repeat-table-head"><span>明细</span><span>日期</span><span>里程碑事件</span><span>责任人</span><span>备注</span><span>操作</span></div>
+                    <div class="repeat-table-row"><strong>计划 1</strong><span>2026-07</span><span>立项评审</span><span>张工</span><span>提交建设方案</span><span class="repeat-actions"><button type="button" data-action="viewDetail" data-detail="contentDetail">详情</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
+                    <div class="repeat-table-row"><strong>计划 2</strong><span>2026-08</span><span>采购论证</span><span>李老师</span><span>完成论证和采购材料</span><span class="repeat-actions"><button type="button" data-action="viewDetail" data-detail="contentDetail">详情</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
+                    <div class="repeat-table-row"><strong>计划 3</strong><span>2026-10</span><span>实施试运行</span><span>王工</span><span>完成联调测试</span><span class="repeat-actions"><button type="button" data-action="viewDetail" data-detail="contentDetail">详情</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
+                    <div class="repeat-table-row"><strong>计划 4</strong><span>2026-12</span><span>验收归档</span><span>张工</span><span>提交验收和归档材料</span><span class="repeat-actions"><button type="button" data-action="viewDetail" data-detail="contentDetail">详情</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
+                  </div>
+                </div>
+              </section>
+              <section class="team-subpanel flow-node-section">
+                <div class="mini-head"><h3>流程节点</h3><button class="ghost-btn" type="button" data-action="downloadTemplate">下载清单</button></div>
+                <div class="mini-table attachment-table">
+                  <div><span>阶段</span><span>必备事项</span></div>
+                  <div><span>立项审核</span><span>项目主管/归口负责人确认</span></div>
+                  <div><span>采购</span><span>采购信息、合同、供应商资料</span></div>
+                  <div><span>试运行</span><span>试运行报告、问题整改记录</span></div>
+                  <div><span>验收</span><span>验收申请、验收意见、签字材料</span></div>
+                  <div><span>归档</span><span>归档移交清单、退金/结项记录</span></div>
+                </div>
+              </section>
+            </section>
+
+            <section class="wizard-pane" data-wizard-panel="3">
+              <div class="panel-head compact-head"><h2>预算材料</h2><span class="pill blue">待确认</span></div>
+              <div class="form-grid form-grid-3">
+                <label><span>* 项目预算（元）</span><input value="860000" /></label>
+                <label><span>资金编号</span><input value="XXH-2026-01" /></label>
+                <label><span>* 预算来源</span><select><option>信息化建设专项</option><option>部门自筹</option><option>财政拨款</option></select></label>
+                <label><span>预算年度</span><input value="2026" /></label>
+                <label><span>预算性质</span><select><option>专项经费</option><option>运维经费</option><option>部门经费</option></select></label>
+                <label><span>是否需采购</span><select><option>是</option><option>否</option></select></label>
+                <label><span>采购方式</span><select><option>校内论证后采购</option><option>公开招标</option><option>单一来源</option><option>无需采购</option></select></label>
+                <label><span>采购预算（元）</span><input value="820000" /></label>
+                <label><span>采购内容</span><input value="软件平台、日志接入服务、实施服务" /></label>
+                <label><span>供应商</span><input value="立项后填写" /></label>
+                <label><span>合同编号</span><input value="立项后生成" disabled /></label>
+                <label><span>合同金额（元）</span><input value="待合同确认" disabled /></label>
+                <label><span>验收方式</span><select><option>专家评审验收</option><option>部门验收</option><option>第三方测评</option></select></label>
+                <label><span>是否需要退金</span><select><option>待合同确认</option><option>是</option><option>否</option></select></label>
+                <label><span>结项方式</span><select><option>验收后归档结项</option><option>退金后结项</option></select></label>
+                <label><span>预算测算表</span><input value="待上传" disabled /></label>
+                <label><span>申报书附件</span><input value="已上传" disabled /></label>
+                <label><span>采购论证材料</span><input value="待立项后上传" disabled /></label>
+                <label><span>试运行报告</span><input value="待建设后上传" disabled /></label>
+                <label><span>验收申请材料</span><input value="待验收阶段上传" disabled /></label>
+                <label><span>归档移交清单</span><input value="系统自动生成" disabled /></label>
+              </div>
+              <div class="budget-preview">
+                <div><span>预算匹配</span><strong>信息化建设专项可用</strong></div>
+                <div><span>预计占用</span><strong>86 万元</strong></div>
+                <div><span>材料提示</span><strong>预算测算表待补</strong></div>
+              </div>
+              <div class="mini-head attachment-head"><h3>附件清单</h3><button class="ghost-btn" type="button" data-action="downloadTemplate">下载材料清单</button></div>
+              <div class="attachment-check-table">
+                <div><span>阶段</span><span>附件名称</span><span>材料清单</span><span>是否必填</span><span>当前状态</span><span>操作</span></div>
+                <div><span>新建立项</span><strong>项目申报书</strong><span>申报书、建设必要性、团队角色表</span><span>必填</span><em>已上传</em><span class="attach-actions"><button type="button" data-action="uploadMaterial">上传</button><button type="button" data-action="previewMaterial">查看已上传附件</button></span></div>
+                <div><span>立项审核</span><strong>预算测算明细表</strong><span>预算测算表、资金来源说明、归口确认意见</span><span>必填</span><em>待补齐</em><span class="attach-actions"><button type="button" data-action="uploadMaterial">上传</button><button type="button" data-action="previewMaterial">查看已上传附件</button></span></div>
+                <div><span>新建采购</span><strong>采购论证材料</strong><span>采购论证表、供应商资料、合同草稿</span><span>后续必填</span><em>立项后上传</em><span class="attach-actions"><button type="button" data-action="uploadMaterial">上传</button><button type="button" data-action="previewMaterial">查看已上传附件</button></span></div>
+                <div><span>试运行</span><strong>试运行报告</strong><span>试运行报告、问题整改记录、用户确认单</span><span>后续必填</span><em>建设后上传</em><span class="attach-actions"><button type="button" data-action="uploadMaterial">上传</button><button type="button" data-action="previewMaterial">查看已上传附件</button></span></div>
+                <div><span>验收归档</span><strong>验收申请、签字页、归档移交清单</strong><span>验收申请、验收意见、签字页、归档移交清单</span><span>后续必填</span><em>验收后归集</em><span class="attach-actions"><button type="button" data-action="uploadMaterial">上传</button><button type="button" data-action="previewMaterial">查看已上传附件</button></span></div>
+              </div>
+            </section>
+
+            <section class="wizard-pane" data-wizard-panel="4">
+              <div class="panel-head compact-head"><h2>确认提交</h2><span class="pill green">可提交</span></div>
+              <div class="confirm-grid">
+                <article><span>项目名称</span><strong>网络安全态势感知平台</strong></article>
+                <article><span>项目类别</span><strong>网络安全 / 应用系统</strong></article>
+                <article><span>申报部门</span><strong>信息化办公室</strong></article>
+                <article><span>归口部门</span><strong>信息化办公室</strong></article>
+                <article><span>使用部门</span><strong>全校</strong></article>
+                <article><span>项目来源</span><strong>安全整改</strong></article>
+                <article><span>项目预算</span><strong>860000 元</strong></article>
+                <article><span>采购方式</span><strong>校内论证后采购</strong></article>
+                <article><span>建设周期</span><strong>2026-07 至 2026-12</strong></article>
+                <article><span>团队角色</span><strong>3 人已配置</strong></article>
+                <article><span>验收方式</span><strong>专家评审验收</strong></article>
+                <article><span>归档方式</span><strong>验收后归档结项</strong></article>
+              </div>
+              <div class="confirm-checklist">
+                <article><b></b><span>基础信息、归口部门、项目负责人已填写</span></article>
+                <article><b></b><span>建设目标、必要性、预期成效已填写</span></article>
+                <article><b></b><span>团队角色已配置，满足项目申报必填要求</span></article>
+                <article><b></b><span>采购、试运行、验收、归档材料已纳入后续清单</span></article>
+                <article><b class="warning-dot"></b><span>申报书已上传，预算测算表待补充后可提交立项</span></article>
+              </div>
+            </section>
+
+            <div class="wizard-actions">
+              <button class="ghost-btn is-hidden" type="button" id="wizardPrev">上一步</button>
+              <button class="ghost-btn" type="button" data-action="saveDraft">保存草稿</button>
+              <button class="ghost-btn is-hidden" type="button" id="wizardSubmit" data-action="submitProject">提交立项</button>
+              <button class="primary-btn" type="button" id="wizardNext">下一步</button>
+            </div>
+          </section>
+        </section>
+
+        <section class="screen" id="myProjects">
+          <section class="panel my-project-panel">
+            <div class="my-project-stats" id="myProjectStats">
+              <button class="is-active" type="button" data-my-bucket="all"><span>项目总数</span><strong>12</strong></button>
+              <button type="button" data-my-bucket="running"><span>进行中</span><strong>7</strong></button>
+              <button type="button" data-my-bucket="done"><span>已完结</span><strong>3</strong></button>
+              <button type="button" data-my-bucket="rejected"><span>已驳回</span><strong>2</strong></button>
+            </div>
+            <div class="my-project-query">
+              <label><span>项目名称</span><input id="myProjectSearch" type="search" placeholder="输入项目名称" /></label>
+              <label><span>建设年度</span><select id="myProjectYear"><option value="all">全部</option><option>2026</option><option>2025</option><option>2024</option></select></label>
+              <label><span>当前节点</span><select id="myProjectStatus"><option value="all">全部</option><option>待立项</option><option>实施中</option><option>退回</option></select></label>
+              <label><span>材料状态</span><select id="myMaterialState"><option value="all">全部</option><option>缺材料</option><option>已齐</option><option>需补预算表</option></select></label>
+              <button class="primary-btn" type="button" data-action="searchMyProjects">查询</button>
+              <button class="ghost-btn" type="button" data-action="exportReport">导出</button>
+            </div>
+            <div class="data-table my-project-table">
+              <div class="table-row table-head"><span>项目名称</span><span>当前节点</span><span>材料</span><span>下一步</span><span>更新</span><span>操作</span></div>
+              <div class="table-row" data-my-project-row data-pending="true" data-bucket="running" data-year="2026" data-status="待立项" data-material="缺材料"><span>网络安全态势感知平台</span><span><b class="pill blue">待立项</b></span><span>缺 1 项</span><span>补预算测算表</span><span>06-28</span><span class="row-actions"><button class="plain-btn" type="button" data-action="viewDetail" data-detail="applicationDetail">详情</button><button class="ghost-btn" type="button" data-action="quickProcess">办理</button><button class="ghost-btn" type="button" data-action="projectProgress">进度</button></span></div>
+              <div class="table-row" data-my-project-row data-bucket="running" data-year="2026" data-status="实施中" data-material="已齐"><span>统一身份认证平台升级</span><span><b class="pill green">实施中</b></span><span>已齐</span><span>提交试运行报告</span><span>06-24</span><span class="row-actions"><button class="plain-btn" type="button" data-action="viewDetail" data-detail="applicationDetail">详情</button><button class="ghost-btn" type="button" data-action="quickProcess">办理</button><button class="ghost-btn" type="button" data-action="projectProgress">进度</button></span></div>
+              <div class="table-row" data-my-project-row data-pending="true" data-bucket="rejected" data-year="2025" data-status="退回" data-material="需补预算表"><span>数据中心存储扩容</span><span><b class="pill amber">退回</b></span><span>需补预算表</span><span>重新提交</span><span>06-18</span><span class="row-actions"><button class="plain-btn" type="button" data-action="viewDetail" data-detail="applicationDetail">详情</button><button class="ghost-btn" type="button" data-action="quickProcess">办理</button><button class="ghost-btn" type="button" data-action="projectProgress">进度</button></span></div>
+              <div class="table-row" data-my-project-row data-bucket="running" data-year="2024" data-status="实施中" data-material="已齐"><span>日志审计平台建设</span><span><b class="pill green">实施中</b></span><span>已齐</span><span>上传阶段报告</span><span>06-12</span><span class="row-actions"><button class="plain-btn" type="button" data-action="viewDetail" data-detail="applicationDetail">详情</button><button class="ghost-btn" type="button" data-action="quickProcess">办理</button><button class="ghost-btn" type="button" data-action="projectProgress">进度</button></span></div>
+              <div class="table-row" data-my-project-row data-bucket="done" data-year="2024" data-status="实施中" data-material="已齐"><span>校园出口链路优化</span><span><b class="pill green">已完结</b></span><span>已齐</span><span>已归档</span><span>05-30</span><span class="row-actions"><button class="plain-btn" type="button" data-action="viewDetail" data-detail="applicationDetail">详情</button><button class="ghost-btn" type="button" data-action="quickProcess">办理</button><button class="ghost-btn" type="button" data-action="projectProgress">进度</button></span></div>
+              <div class="table-row" data-my-project-row data-bucket="done" data-year="2025" data-status="实施中" data-material="已齐"><span>一站式网上办事大厅扩展</span><span><b class="pill green">已完结</b></span><span>已齐</span><span>已归档</span><span>04-18</span><span class="row-actions"><button class="plain-btn" type="button" data-action="viewDetail" data-detail="applicationDetail">详情</button><button class="ghost-btn" type="button" data-action="quickProcess">办理</button><button class="ghost-btn" type="button" data-action="projectProgress">进度</button></span></div>
+            </div>
+            <div class="my-project-pagination">
+              <span id="myProjectPageInfo">共 6 条</span>
+              <label>每页
+                <select id="myProjectPageSize"><option>5</option><option>10</option><option>20</option></select>
+              </label>
+              <div id="myProjectPager">
+                <button class="ghost-btn" type="button" data-page-dir="-1">上一页</button>
+                <button class="is-active" type="button" data-page-number="1">1</button>
+                <button type="button" data-page-number="2">2</button>
+                <button class="ghost-btn" type="button" data-page-dir="1">下一页</button>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <section class="screen" id="manage">
+          <section class="admin-project-hero admin-list-hero">
+            <div class="admin-project-icon"><img src="./assets/icon-apply.png" alt="" /></div>
+            <div class="admin-project-title">
+              <h2 id="adminHeroTitle">项目综合查询</h2>
+              <p id="adminHeroMeta"><span>按项目、部门、阶段快速定位业务记录</span></p>
+            </div>
+          </section>
+
+          <div class="admin-tab-panels">
+          <section class="admin-tab-panel is-active" data-manage-panel="business">
+          <div class="admin-content-grid ledger-grid">
+            <section class="admin-main-card">
+              <div class="admin-card-head">
+                <h2>综合项目列表</h2>
+                <div class="admin-head-actions">
+                  <button class="ghost-btn" type="button" data-action="searchList">查询</button>
+                  <button class="ghost-btn" type="button" data-action="fieldConfig">字段</button>
+                  <button class="primary-btn" type="button" data-action="exportReport">导出</button>
+                </div>
+              </div>
+
+              <div class="admin-query-panel">
+                <label><span>年度</span><select><option>全部</option><option>2026</option><option>2025</option></select></label>
+                <label><span>项目名称</span><input placeholder="请输入项目名称" /></label>
+                <label><span>申报部门</span><input placeholder="请输入申报部门" /></label>
+                <label><span>负责人</span><input placeholder="请输入负责人" /></label>
+                <label><span>状态</span><select><option>全部</option><option>新建立项</option><option>立项审核</option><option>新建采购</option><option>实施</option><option>试运行</option><option>验收</option><option>验收审核</option><option>归档</option><option>退金</option><option>结项</option></select></label>
+                <label><span>进度</span><select><option>全部</option><option>未开始</option><option>进行中</option><option>已完成</option><option>已归档</option></select></label>
+                <label><span>材料</span><select><option>全部</option><option>缺材料</option><option>齐全</option></select></label>
+              </div>
+
+              <div class="admin-summary-row">
+                <button class="is-active" type="button" data-ledger-filter="all">全部 126</button>
+                <button type="button" data-ledger-filter="pending">待处理 8</button>
+                <button type="button" data-ledger-filter="approval">待立项 12</button>
+                <button type="button" data-ledger-filter="missing">缺材料 5</button>
+                <button type="button" data-ledger-filter="archive">待归档 7</button>
+              </div>
+
+              <div class="admin-table">
+                <div class="admin-table-row admin-table-head"><span>编号</span><span>项目名称</span><span>申报部门</span><span>负责人</span><button class="sort-head" type="button" data-action="sortColumn" data-sort-key="year">年度 ↕</button><span>状态</span><span>当前阶段</span><button class="sort-head" type="button" data-action="sortColumn" data-sort-key="budget">预算 ↕</button><button class="sort-head" type="button" data-action="sortColumn" data-sort-key="material">材料 ↕</button><span>操作</span></div>
+                <div class="admin-table-row" data-ledger-row data-ledger-bucket="pending approval missing"><span>XXH2026001</span><strong>网络安全态势感知平台</strong><span>信息办</span><span>张工</span><span>2026</span><span><b class="admin-badge blue">待立项</b></span><span>预算匹配</span><span>86 万</span><span>缺 1</span><span class="row-actions"><button class="star-btn" type="button" data-action="pinRow" aria-label="置顶项目" aria-pressed="false">☆</button><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="previewMaterial">材料</button></span></div>
+                <div class="admin-table-row" data-ledger-row data-ledger-bucket="pending"><span>XXH2026002</span><strong>统一身份认证平台升级</strong><span>信息办</span><span>李工</span><span>2026</span><span><b class="admin-badge green">建设中</b></span><span>系统开发</span><span>42 万</span><span>齐全</span><span class="row-actions"><button class="star-btn" type="button" data-action="pinRow" aria-label="置顶项目" aria-pressed="false">☆</button><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="previewMaterial">材料</button></span></div>
+                <div class="admin-table-row" data-ledger-row data-ledger-bucket="archive"><span>XXH2024018</span><strong>校园出口链路优化一期</strong><span>网络中心</span><span>陈工</span><span>2024</span><span><b class="admin-badge green">已结项</b></span><span>结项</span><span>118 万</span><span>齐全</span><span class="row-actions"><button class="star-btn" type="button" data-action="pinRow" aria-label="置顶项目" aria-pressed="false">☆</button><button type="button" data-action="fullProcessDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="previewMaterial">材料</button></span></div>
+                <div class="admin-table-row" data-ledger-row data-ledger-bucket="archive"><span>XXH2025008</span><strong>数据备份与容灾扩容一期</strong><span>信息办</span><span>王工</span><span>2025</span><span><b class="admin-badge green">已归档</b></span><span>归档</span><span>58 万</span><span>齐全</span><span class="row-actions"><button class="star-btn" type="button" data-action="pinRow" aria-label="置顶项目" aria-pressed="false">☆</button><button type="button" data-action="fullProcessDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="previewMaterial">材料</button></span></div>
+                <div class="admin-table-row" data-ledger-row data-ledger-bucket="pending missing"><span>XXH2026003</span><strong>数据备份与容灾扩容</strong><span>信息办</span><span>王工</span><span>2026</span><span><b class="admin-badge amber">需完善</b></span><span>材料补正</span><span>58 万</span><span>缺 3</span><span class="row-actions"><button class="star-btn" type="button" data-action="pinRow" aria-label="置顶项目" aria-pressed="false">☆</button><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="previewMaterial">材料</button></span></div>
+                <div class="admin-table-row" data-ledger-row data-ledger-bucket="approval"><span>XXH2027001</span><strong>校园网出口链路优化</strong><span>网络中心</span><span>陈工</span><span>2027</span><span><b class="admin-badge blue">待立项</b></span><span>项目库</span><span>120 万</span><span>齐全</span><span class="row-actions"><button class="star-btn" type="button" data-action="pinRow" aria-label="置顶项目" aria-pressed="false">☆</button><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="viewDetail" data-detail="budgetDetail">经费</button></span></div>
+                <div class="admin-table-row" data-ledger-row data-ledger-bucket="pending"><span>XXH2026005</span><strong>日志审计平台建设</strong><span>信息办</span><span>赵工</span><span>2026</span><span><b class="admin-badge green">已入库</b></span><span>采购论证</span><span>36 万</span><span>齐全</span><span class="row-actions"><button class="star-btn" type="button" data-action="pinRow" aria-label="置顶项目" aria-pressed="false">☆</button><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="viewDetail" data-detail="logDetail">日志</button></span></div>
+              </div>
+            </section>
+          </div>
+          </section>
+
+          <section class="admin-tab-panel" data-manage-panel="processNode">
+            <section class="admin-main-card process-list-card">
+              <div class="admin-card-head">
+                <h2 id="processNodeTitle">新建立项列表</h2>
+                <div class="admin-head-actions">
+                  <button class="ghost-btn" type="button" data-action="fieldConfig">字段</button>
+                  <button class="ghost-btn" type="button" data-action="searchList">查询</button>
+                  <button class="primary-btn" type="button" data-action="exportReport">导出</button>
+                </div>
+              </div>
+              <div class="admin-query-panel process-node-query">
+                <label><span>建设年度</span><select><option>全部</option><option>2026</option><option>2025</option><option>2024</option></select></label>
+                <label><span>项目名称</span><input placeholder="请输入项目名称" /></label>
+                <label><span>申报部门</span><input placeholder="请输入申报部门" /></label>
+                <label><span>责任人</span><input placeholder="请输入责任人" /></label>
+                <label><span>处理状态</span><select id="processNodeStatus"><option>全部</option><option>待处理</option><option>处理中</option><option>已完成</option><option>退回</option></select></label>
+                <label><span>材料状态</span><select><option>全部</option><option>缺材料</option><option>齐全</option><option>待确认</option></select></label>
+              </div>
+              <div class="admin-summary-row" id="processNodeSummary"></div>
+              <div class="admin-table process-node-table" id="processNodeRows"></div>
+              <div class="table-pagination process-node-pagination">
+                <span>共 24 条</span>
+                <div>
+                  <button type="button">10 条/页</button>
+                  <button type="button">‹</button>
+                  <button class="is-active" type="button">1</button>
+                  <button type="button">2</button>
+                  <button type="button">3</button>
+                  <button type="button">›</button>
+                </div>
+              </div>
+            </section>
+          </section>
+
+          <section class="admin-tab-panel" data-manage-panel="applications">
+            <section class="admin-main-card">
+              <div class="admin-card-head">
+                <h2>立项申报列表</h2>
+                <div class="admin-head-actions">
+                  <button class="ghost-btn" type="button" data-action="fieldConfig">字段</button>
+                  <button class="ghost-btn" type="button" data-action="searchList">查询</button>
+                  <button class="primary-btn" type="button" data-action="exportReport">导出</button>
+                </div>
+              </div>
+              <div class="admin-query-panel application-query-panel">
+                <label><span>申请批次</span><select><option>全部</option><option>2026 年度</option><option>2025 年度</option><option>2024 年度</option></select></label>
+                <label><span>项目类型</span><select><option>全部</option><option>应用系统</option><option>基础设施</option><option>网络安全</option><option>数据治理</option></select></label>
+                <label><span>项目名称</span><input placeholder="请输入项目名称" /></label>
+                <label><span>项目状态</span><select><option>全部</option><option>草稿</option><option>已提交</option><option>退回修改</option><option>已入库</option></select></label>
+                <label><span>开始日期</span><input placeholder="立项开始日期" /></label>
+                <label><span>结束日期</span><input placeholder="立项结束日期" /></label>
+              </div>
+              <div class="admin-summary-row">
+                <button class="is-active" type="button">全部 36</button>
+                <button type="button">草稿 6</button>
+                <button type="button">已提交 12</button>
+                <button type="button">退回修改 4</button>
+                <button type="button">已入库 14</button>
+              </div>
+              <div class="admin-table application-table">
+                <div class="admin-table-row admin-table-head"><span>申请批次</span><span>项目类型</span><span>项目名称</span><span>立项日期</span><span>项目状态</span><span>关联项目</span><span>验收归档</span><span>操作</span></div>
+                <div class="admin-table-row"><span>2026 年度</span><span>网络安全</span><strong>网络安全态势感知平台</strong><span>2026-06-20</span><span><b class="admin-badge blue">已提交</b></span><span>待生成</span><span>未开始</span><span class="row-actions"><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="previewMaterial">材料</button></span></div>
+                <div class="admin-table-row"><span>2026 年度</span><span>应用系统</span><strong>统一身份认证平台升级</strong><span>2026-05-18</span><span><b class="admin-badge green">已入库</b></span><span>XXH2026002</span><span>进行中</span><span class="row-actions"><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="previewMaterial">材料</button></span></div>
+                <div class="admin-table-row"><span>2026 年度</span><span>基础设施</span><strong>数据备份与容灾扩容</strong><span>2026-06-12</span><span><b class="admin-badge amber">退回修改</b></span><span>待生成</span><span>未开始</span><span class="row-actions"><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="previewMaterial">材料</button></span></div>
+                <div class="admin-table-row"><span>2026 年度</span><span>应用系统</span><strong>一站式网上办事大厅扩展</strong><span>2026-06-08</span><span><b class="admin-badge blue">已提交</b></span><span>待生成</span><span>未开始</span><span class="row-actions"><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="previewMaterial">材料</button></span></div>
+              </div>
+            </section>
+          </section>
+
+          <section class="admin-tab-panel" data-manage-panel="overview">
+            <section class="admin-main-card">
+              <div class="admin-card-head"><h2>项目概览</h2><button class="ghost-btn" type="button" data-action="viewDetail" data-detail="applicationDetail">查看完整详情</button></div>
+              <div class="admin-detail-grid">
+                <article><span>项目编号</span><strong>XXH2026001</strong></article>
+                <article><span>项目名称</span><strong>网络安全态势感知平台</strong></article>
+                <article><span>申报部门</span><strong>信息办</strong></article>
+                <article><span>负责人</span><strong>张工</strong></article>
+                <article><span>建设年度</span><strong>2026</strong></article>
+                <article><span>当前阶段</span><strong>预算匹配</strong></article>
+                <article><span>预算估算</span><strong>86 万</strong></article>
+                <article><span>材料状态</span><strong>缺 1 项</strong></article>
+              </div>
+              <div class="admin-text-card">
+                <h3>项目简介</h3>
+                <p>建设统一的网络安全态势感知、告警处置和风险闭环能力，支撑网络安全治理、等保测评整改与日常运维巡检。</p>
+              </div>
+            </section>
+          </section>
+
+          <section class="admin-tab-panel" data-manage-panel="content">
+            <section class="admin-main-card process-list-card">
+              <div class="admin-card-head">
+                <h2>采购管理列表</h2>
+                <div class="admin-head-actions">
+                  <button class="ghost-btn" type="button" data-action="fieldConfig">字段</button>
+                  <button class="ghost-btn" type="button" data-action="searchList">查询</button>
+                  <button class="primary-btn" type="button" data-action="exportReport">导出</button>
+                </div>
+              </div>
+              <div class="admin-query-panel">
+                <label><span>项目年度</span><select><option>全部</option><option>2026</option><option>2025</option></select></label>
+                <label><span>项目名称</span><input placeholder="请输入项目名称" /></label>
+                <label><span>申报部门</span><input placeholder="请输入申报部门" /></label>
+                <label><span>负责人</span><input placeholder="请输入负责人" /></label>
+                <label><span>过程环节</span><select><option>全部</option><option>新建采购</option><option>采购查询</option><option>实施</option><option>试运行</option></select></label>
+                <label><span>材料状态</span><select><option>全部</option><option>缺材料</option><option>齐全</option></select></label>
+              </div>
+              <div class="admin-summary-row">
+                <button class="is-active" type="button">全部 24</button>
+                <button type="button">新建采购 6</button>
+                <button type="button">采购查询 5</button>
+                <button type="button">实施 10</button>
+                <button type="button">试运行 3</button>
+              </div>
+              <div class="admin-table process-table">
+                <div class="admin-table-row admin-table-head"><span>项目编号</span><span>项目名称</span><span>申报部门</span><span>负责人</span><button class="sort-head" type="button" data-action="sortColumn" data-sort-key="year">年度 ↕</button><span>过程环节</span><span>当前任务</span><button class="sort-head" type="button" data-action="sortColumn" data-sort-key="budget">合同/预算 ↕</button><span>材料</span><span>操作</span></div>
+                <div class="admin-table-row"><span>XXH2026005</span><strong>日志审计平台建设</strong><span>信息办</span><span>赵工</span><span>2026</span><span><b class="admin-badge blue">新建采购</b></span><span>登记采购方式、采购金额、合同入口</span><span>36 万</span><span>齐全</span><span class="row-actions"><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="previewMaterial">材料</button></span></div>
+                <div class="admin-table-row"><span>XXH2026002</span><strong>统一身份认证平台升级</strong><span>信息办</span><span>李工</span><span>2026</span><span><b class="admin-badge green">实施</b></span><span>上传实施计划、会议纪要、阶段报告</span><span>42 万</span><span>齐全</span><span class="row-actions"><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="previewMaterial">材料</button></span></div>
+                <div class="admin-table-row"><span>XXH2025011</span><strong>数据中心存储扩容</strong><span>信息办</span><span>王工</span><span>2025</span><span><b class="admin-badge amber">采购查询</b></span><span>补充采购过程文件、结果文件、合同</span><span>58 万</span><span>缺 2</span><span class="row-actions"><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="previewMaterial">材料</button></span></div>
+                <div class="admin-table-row"><span>XXH2024016</span><strong>日志审计平台建设二期</strong><span>网络中心</span><span>陈工</span><span>2024</span><span><b class="admin-badge green">试运行</b></span><span>提交试运行报告和问题整改记录</span><span>48 万</span><span>齐全</span><span class="row-actions"><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="previewMaterial">材料</button></span></div>
+              </div>
+            </section>
+          </section>
+
+          <section class="admin-tab-panel" data-manage-panel="team">
+            <section class="admin-main-card">
+              <div class="admin-card-head"><h2>项目团队</h2><button class="ghost-btn" type="button" data-action="addTeamRole">添加成员</button></div>
+              <div class="admin-mini-table">
+                <div><span>团队角色</span><span>姓名</span><span>所属部门</span><span>联系方式</span><span>操作</span></div>
+                <div><strong>项目负责人</strong><span>张工</span><span>信息办</span><span>138****5678</span><button type="button" data-action="viewDetail" data-detail="teamDetail">查看</button></div>
+                <div><strong>归口负责人</strong><span>李老师</span><span>信息办</span><span>136****2330</span><button type="button" data-action="viewDetail" data-detail="teamDetail">查看</button></div>
+                <div><strong>实施联系人</strong><span>王工</span><span>网络中心</span><span>139****1120</span><button type="button" data-action="viewDetail" data-detail="teamDetail">查看</button></div>
+              </div>
+            </section>
+          </section>
+
+          <section class="admin-tab-panel" data-manage-panel="plan">
+            <section class="admin-main-card">
+              <div class="admin-card-head"><h2>项目计划</h2><button class="ghost-btn" type="button" data-action="addMilestone">新增里程碑</button></div>
+              <div class="admin-plan-grid">
+                <article class="done"><b>需求调研</b><span>2026-04</span><em>已完成</em></article>
+                <article class="done"><b>方案设计</b><span>2026-05</span><em>已完成</em></article>
+                <article class="active"><b>项目立项</b><span>2026-06</span><em>当前节点</em></article>
+                <article><b>系统开发</b><span>2026-07 ~ 10</span><em>未开始</em></article>
+                <article><b>测试验收</b><span>2026-11 ~ 12</span><em>未开始</em></article>
+              </div>
+            </section>
+          </section>
+
+          <section class="admin-tab-panel" data-manage-panel="acceptance">
+            <section class="admin-main-card process-list-card">
+              <div class="admin-card-head">
+                <h2>验收管理列表</h2>
+                <div class="admin-head-actions">
+                  <button class="ghost-btn" type="button" data-action="fieldConfig">字段</button>
+                  <button class="ghost-btn" type="button" data-action="searchList">查询</button>
+                  <button class="primary-btn" type="button" data-action="exportReport">导出</button>
+                </div>
+              </div>
+              <div class="admin-query-panel">
+                <label><span>建设年度</span><select><option>全部</option><option>2026</option><option>2025</option><option>2024</option></select></label>
+                <label><span>项目名称</span><input placeholder="请输入项目名称" /></label>
+                <label><span>建设单位</span><input placeholder="请输入建设单位" /></label>
+                <label><span>负责人</span><input placeholder="请输入负责人" /></label>
+                <label><span>验收环节</span><select><option>全部</option><option>验收</option><option>验收审核</option><option>整改完善</option><option>验收通过</option></select></label>
+                <label><span>验收方式</span><select><option>全部</option><option>专家评审验收</option><option>部门验收</option><option>第三方测评</option></select></label>
+              </div>
+              <div class="admin-summary-row">
+                <button class="is-active" type="button">全部 9</button>
+                <button type="button">验收中 2</button>
+                <button type="button">审核中 3</button>
+                <button type="button">整改中 2</button>
+                <button type="button">待归档 2</button>
+              </div>
+              <div class="admin-table process-table">
+                <div class="admin-table-row admin-table-head"><span>项目编号</span><span>项目名称</span><span>建设单位</span><span>负责人</span><button class="sort-head" type="button" data-action="sortColumn" data-sort-key="year">年度 ↕</button><span>验收环节</span><span>审核状态</span><button class="sort-head" type="button" data-action="sortColumn" data-sort-key="budget">金额 ↕</button><span>材料</span><span>操作</span></div>
+                <div class="admin-table-row"><span>XXH2024016</span><strong>日志审计平台建设</strong><span>网络中心</span><span>赵工</span><span>2024</span><span><b class="admin-badge green">验收通过</b></span><span>审核通过</span><span>36 万</span><span>齐全</span><span class="row-actions"><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="previewMaterial">材料</button></span></div>
+                <div class="admin-table-row"><span>XXH2025014</span><strong>校园卡通行数据看板</strong><span>信息办</span><span>周老师</span><span>2025</span><span><b class="admin-badge amber">整改完善</b></span><span>验收退回</span><span>28 万</span><span>缺 1</span><span class="row-actions"><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="previewMaterial">材料</button></span></div>
+                <div class="admin-table-row"><span>XXH2025008</span><strong>数据备份与容灾扩容</strong><span>信息办</span><span>王工</span><span>2025</span><span><b class="admin-badge blue">验收审核</b></span><span>待审核</span><span>58 万</span><span>待确认</span><span class="row-actions"><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="previewMaterial">材料</button></span></div>
+                <div class="admin-table-row"><span>XXH2026002</span><strong>统一身份认证平台升级</strong><span>信息办</span><span>李工</span><span>2026</span><span><b class="admin-badge blue">验收</b></span><span>申请已提交</span><span>42 万</span><span>齐全</span><span class="row-actions"><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="previewMaterial">材料</button></span></div>
+              </div>
+            </section>
+          </section>
+
+          <section class="admin-tab-panel" data-manage-panel="fund">
+            <section class="admin-main-card process-list-card">
+              <div class="admin-card-head">
+                <h2>立项审核列表</h2>
+                <div class="admin-head-actions">
+                  <button class="ghost-btn" type="button" data-action="fieldConfig">字段</button>
+                  <button class="ghost-btn" type="button" data-action="searchList">查询</button>
+                  <button class="primary-btn" type="button" data-action="exportReport">导出</button>
+                </div>
+              </div>
+              <div class="admin-query-panel">
+                <label><span>立项年度</span><select><option>全部</option><option>2026</option><option>2025</option><option>2024</option></select></label>
+                <label><span>项目名称</span><input placeholder="请输入项目名称" /></label>
+                <label><span>申报部门</span><input placeholder="请输入申报部门" /></label>
+                <label><span>负责人</span><input placeholder="请输入负责人" /></label>
+                <label><span>审核状态</span><select><option>全部</option><option>待预算匹配</option><option>评审中</option><option>已立项</option><option>退回</option></select></label>
+                <label><span>预算来源</span><select><option>全部</option><option>信息化建设专项</option><option>基础设施更新预算</option><option>网络安全与数据治理</option></select></label>
+              </div>
+              <div class="admin-summary-row">
+                <button class="is-active" type="button">全部 12</button>
+                <button type="button">待审核 5</button>
+                <button type="button">评审中 4</button>
+                <button type="button">已立项 3</button>
+              </div>
+              <div class="admin-table process-table">
+                <div class="admin-table-row admin-table-head"><span>立项编号</span><span>项目名称</span><span>申报部门</span><span>负责人</span><button class="sort-head" type="button" data-action="sortColumn" data-sort-key="year">年度 ↕</button><span>审核状态</span><span>预算来源</span><button class="sort-head" type="button" data-action="sortColumn" data-sort-key="budget">预算 ↕</button><span>资金编号</span><span>操作</span></div>
+                <div class="admin-table-row"><span>LX2026001</span><strong>网络安全态势感知平台</strong><span>信息办</span><span>张工</span><span>2026</span><span><b class="admin-badge blue">待预算匹配</b></span><span>信息化建设专项</span><span>86 万</span><span>XXH-2026-01</span><span class="row-actions"><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="viewDetail" data-detail="budgetDetail">经费</button></span></div>
+                <div class="admin-table-row"><span>LX2026002</span><strong>统一身份认证平台升级</strong><span>信息办</span><span>李工</span><span>2026</span><span><b class="admin-badge green">已立项</b></span><span>网络安全与数据治理</span><span>42 万</span><span>XXH-2026-02</span><span class="row-actions"><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="viewDetail" data-detail="budgetDetail">经费</button></span></div>
+                <div class="admin-table-row"><span>LX2026003</span><strong>数据备份与容灾扩容</strong><span>信息办</span><span>王工</span><span>2026</span><span><b class="admin-badge amber">退回</b></span><span>基础设施更新预算</span><span>58 万</span><span>待生成</span><span class="row-actions"><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="viewDetail" data-detail="budgetDetail">经费</button></span></div>
+                <div class="admin-table-row"><span>LX2026004</span><strong>校园网出口链路优化</strong><span>网络中心</span><span>陈工</span><span>2026</span><span><b class="admin-badge blue">评审中</b></span><span>基础设施更新预算</span><span>120 万</span><span>待生成</span><span class="row-actions"><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="viewDetail" data-detail="budgetDetail">经费</button></span></div>
+              </div>
+            </section>
+          </section>
+
+          <section class="admin-tab-panel" data-manage-panel="docs">
+            <section class="admin-main-card material-admin-card">
+              <div class="admin-card-head">
+                <h2>资料维护</h2>
+                <div class="admin-head-actions">
+                  <button class="ghost-btn" type="button" data-action="fieldConfig">字段</button>
+                  <button class="ghost-btn" type="button" data-action="searchList">查询</button>
+                  <button class="primary-btn" type="button" data-action="uploadMaterial">上传资料</button>
+                </div>
+              </div>
+              <div class="admin-query-panel">
+                <label><span>资料阶段</span><select><option>全部</option><option>申报前</option><option>预算口径</option><option>采购阶段</option><option>验收归档</option></select></label>
+                <label><span>资料名称</span><input placeholder="请输入资料名称" /></label>
+                <label><span>资料类型</span><select><option>全部</option><option>参考资料</option><option>下载模板</option><option>填报样例</option></select></label>
+                <label><span>发布状态</span><select><option>全部</option><option>已发布</option><option>待更新</option><option>已下架</option></select></label>
+                <label><span>适用对象</span><select><option>全部</option><option>申请人</option><option>管理员</option><option>评审专家</option></select></label>
+                <label><span>更新人</span><input placeholder="请输入更新人" /></label>
+              </div>
+              <div class="admin-summary-row">
+                <button class="is-active" type="button">全部 42</button>
+                <button type="button">参考资料 18</button>
+                <button type="button">模板 20</button>
+                <button type="button">待更新 4</button>
+              </div>
+              <div class="admin-table material-admin-table">
+                <div class="admin-table-row admin-table-head"><span>阶段</span><span>资料名称</span><span>类型</span><span>适用对象</span><span>版本</span><span>状态</span><span>更新人</span><span>更新时间</span><span>下载</span><span>操作</span></div>
+                <div class="admin-table-row"><span>申报前</span><strong>信息化项目申报指南</strong><span>参考资料</span><span>申请人</span><span>V3.2</span><span><b class="admin-badge green">已发布</b></span><span>信息办</span><span>2026-07-01</span><span>128</span><span class="row-actions"><button type="button" data-action="previewMaterial">预览</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="downloadTemplate">下载</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
+                <div class="admin-table-row"><span>预算口径</span><strong>预算测算明细表</strong><span>下载模板</span><span>申请人</span><span>V2.1</span><span><b class="admin-badge green">已发布</b></span><span>信息办</span><span>2026-06-28</span><span>96</span><span class="row-actions"><button type="button" data-action="previewMaterial">预览</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="downloadTemplate">下载</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
+                <div class="admin-table-row"><span>采购阶段</span><strong>采购论证资料清单</strong><span>参考资料</span><span>申请人</span><span>V1.8</span><span><b class="admin-badge blue">待更新</b></span><span>采购办</span><span>2026-06-20</span><span>54</span><span class="row-actions"><button type="button" data-action="previewMaterial">预览</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="downloadTemplate">下载</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
+                <div class="admin-table-row"><span>验收归档</span><strong>归档移交清单</strong><span>下载模板</span><span>申请人</span><span>V1.5</span><span><b class="admin-badge green">已发布</b></span><span>档案室</span><span>2026-06-18</span><span>72</span><span class="row-actions"><button type="button" data-action="previewMaterial">预览</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="downloadTemplate">下载</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
+              </div>
+            </section>
+          </section>
+
+          <section class="admin-tab-panel" data-manage-panel="changes">
+            <section class="admin-main-card">
+              <div class="admin-card-head"><h2>变更记录</h2><button class="ghost-btn" type="button" data-action="viewDetail" data-detail="allChanges">查看全部</button></div>
+              <div class="admin-mini-table">
+                <div><span>时间</span><span>变更内容</span><span>操作人</span><span>状态</span><span>操作</span></div>
+                <div><strong>2026-06-28</strong><span>补充预算测算说明</span><span>张工</span><span>已提交</span><button type="button" data-action="viewDetail" data-detail="changeDetail">查看</button></div>
+                <div><strong>2026-06-20</strong><span>调整建设周期</span><span>李老师</span><span>已确认</span><button type="button" data-action="viewDetail" data-detail="changeDetail">查看</button></div>
+              </div>
+            </section>
+          </section>
+
+          <section class="admin-tab-panel" data-manage-panel="logs">
+            <section class="admin-main-card">
+              <div class="admin-card-head"><h2>日志</h2><button class="ghost-btn" type="button" data-action="exportReport">导出日志</button></div>
+              <div class="admin-log-list">
+                <article><time>2026-06-28 10:30</time><strong>张工补充预算测算表</strong><span>材料状态由“缺失”变为“待确认”</span></article>
+                <article><time>2026-06-24 16:45</time><strong>信息办退回预算说明</strong><span>要求补充年度预算口径</span></article>
+                <article><time>2026-06-20 09:12</time><strong>李老师确认团队角色</strong><span>项目负责人和归口负责人已配置</span></article>
+              </div>
+            </section>
+          </section>
+          </div>
+        </section>
+
+        <section class="screen" id="library">
+          <section class="panel">
+            <div class="panel-head"><h2>项目库</h2><button class="primary-btn" type="button" data-action="newProject">新增入库</button></div>
+            <div class="filter-row"><label class="field"><span>关键词</span><input id="projectSearch" type="search" placeholder="项目名称、负责人" /></label><label class="field"><span>年度</span><select id="yearFilter"><option value="all">全部</option><option value="2026">2026</option><option value="2027">2027</option></select></label><div class="chip-row" id="projectStatusFilter"><button type="button" class="chip is-active" data-status="all">全部</button><button type="button" class="chip" data-status="待立项">待立项</button><button type="button" class="chip" data-status="已入库">已入库</button><button type="button" class="chip" data-status="需完善">需完善</button></div></div>
+            <div class="library-layout"><section class="data-table project-table" id="projectRows" aria-label="项目库列表"></section><aside class="project-profile" id="projectDetail" aria-label="项目详情"></aside></div>
+          </section>
+        </section>
+
+        <section class="screen" id="budget">
+          <section class="budget-workbench">
+            <div class="budget-page-head">
+              <div>
+                <span>预算管理</span>
+                <h2>预算匹配工作台</h2>
+                <p>面向信息办项目管理员，用于核对待立项项目、选择年度经费、生成预算占用和立项记录。</p>
+              </div>
+              <button class="ghost-btn" type="button" data-action="budgetRecord">查看预算记录</button>
+            </div>
+
+            <div class="budget-metrics">
+              <article><span>待匹配项目</span><strong>8</strong><em>3 项 P0 优先处理</em></article>
+              <article><span>年度可用余额</span><strong>332 万</strong><em>3 个经费池可用</em></article>
+              <article><span>本次已选金额</span><strong id="budgetMetricSelected">0 万</strong><em id="budgetMetricCount">未选择项目</em></article>
+              <article><span>风险提示</span><strong id="budgetRiskText">待确认</strong><em>余额不足时不可生成</em></article>
+            </div>
+
+            <section class="panel budget-query-card">
+              <div class="admin-query-panel budget-query-panel">
+                <label><span>建设年度</span><select><option>2026</option><option>2027</option><option>2025</option></select></label>
+                <label><span>申报部门</span><select><option>全部</option><option>信息办</option><option>网络中心</option><option>图文信息中心</option></select></label>
+                <label><span>预算来源</span><select><option>全部</option><option>信息化建设专项</option><option>基础设施更新预算</option><option>网络安全与数据治理</option></select></label>
+                <label><span>匹配状态</span><select><option>待匹配</option><option>余额不足</option><option>已生成立项单</option></select></label>
+                <label><span>项目名称</span><input placeholder="输入项目名称或负责人" /></label>
+              </div>
+              <div class="admin-head-actions query-actions-row">
+                <button class="ghost-btn" type="button" data-action="searchList">查询</button>
+                <button class="ghost-btn" type="button" data-action="resetFilter">重置</button>
+                <button class="primary-btn" type="button" data-action="exportReport">导出</button>
+              </div>
+            </section>
+
+            <div class="budget-layout">
+              <section class="panel budget-candidate-panel">
+                <div class="panel-head">
+                  <h2>待匹配项目</h2>
+                  <span class="muted">勾选后进入右侧测算</span>
+                </div>
+                <div id="candidateList" class="candidate-list"></div>
+              </section>
+              <section class="panel budget-pool-panel">
+                <div class="panel-head">
+                  <h2>年度经费池</h2>
+                  <span class="muted">选择一笔经费进行匹配</span>
+                </div>
+                <div id="budgetPool" class="budget-pool"></div>
+              </section>
+              <section class="panel match-panel">
+                <div class="match-panel-head">
+                  <span>本次匹配结果</span>
+                  <b id="matchStatus">可测算</b>
+                </div>
+                <strong id="matchTotal">0 万</strong>
+                <p id="matchText">请选择项目和预算。</p>
+                <div class="balance-card"><span>匹配后预算余额</span><b id="balanceLeft">0 万</b></div>
+                <div class="progress strong"><i id="matchBar" style="width: 0%"></i></div>
+                <div class="summary-list" id="selectedProjects"></div>
+                <div class="match-checklist">
+                  <div><span>预算来源</span><strong>已选择</strong></div>
+                  <div><span>材料状态</span><strong>待系统校验</strong></div>
+                  <div><span>生成结果</span><strong>预算占用 + 立项单</strong></div>
+                </div>
+                <button class="primary-btn" type="button" id="createInitiation">生成立项单</button>
+              </section>
+            </div>
+
+            <section class="panel budget-record-panel">
+              <div class="panel-head">
+                <h2>预算匹配记录</h2>
+                <span class="muted">用于追溯经费占用、立项单和调整记录</span>
+              </div>
+              <div class="budget-record-table">
+                <div><span>记录编号</span><span>项目名称</span><span>经费来源</span><span>占用金额</span><span>状态</span><span>操作</span></div>
+                <div><span>YS2026001</span><strong>网络安全态势感知平台</strong><span>信息化建设专项</span><span>86 万</span><em>待生成立项单</em><span><button type="button" data-action="budgetDetail">详情</button></span></div>
+                <div><span>YS2026002</span><strong>统一身份认证平台升级</strong><span>网络安全与数据治理</span><span>42 万</span><em>已占用</em><span><button type="button" data-action="budgetRecord">记录</button></span></div>
+                <div><span>YS2025008</span><strong>数据备份与容灾扩容一期</strong><span>基础设施更新预算</span><span>58 万</span><em>已归档</em><span><button type="button" data-action="fullProcessDetail">全流程</button></span></div>
+              </div>
+            </section>
+          </section>
+        </section>
+
+        <section class="screen" id="reminders">
+          <section class="reminder-page">
+            <div class="reminder-page-head">
+              <div>
+                <span>事务提醒</span>
+                <h2>提醒处理工作台</h2>
+                <p>集中查看逾期、材料补正、待审核和即将到期事项，管理人员可以直接跟进责任人。</p>
+              </div>
+              <button class="ghost-btn" type="button" data-action="exportReport">导出提醒</button>
+            </div>
+
+            <div class="reminder-metrics">
+              <article class="is-hot"><span>逾期事项</span><strong>3</strong><em>需要今天处理</em></article>
+              <article><span>今日待办</span><strong>8</strong><em>审核与材料确认</em></article>
+              <article><span>材料补正</span><strong>5</strong><em>等待申请人提交</em></article>
+              <article><span>即将到期</span><strong>6</strong><em>未来 7 天</em></article>
+            </div>
+
+            <section class="reminder-filter-card">
+              <div class="reminder-query-grid">
+                <label><span>提醒类型</span><select><option>全部</option><option>逾期</option><option>材料补正</option><option>待审核</option><option>即将到期</option></select></label>
+                <label><span>项目阶段</span><select><option>全部</option><option>新建立项</option><option>立项审核</option><option>新建采购</option><option>实施</option><option>试运行</option><option>验收</option><option>验收审核</option><option>归档</option><option>退金</option><option>结项</option></select></label>
+                <label><span>责任人</span><input type="search" placeholder="输入责任人" /></label>
+                <label><span>处理状态</span><select><option>待处理</option><option>已提醒</option><option>已完成</option></select></label>
+              </div>
+              <div class="reminder-actions">
+                <button class="primary-btn" type="button" data-action="searchList">查询</button>
+                <button class="ghost-btn" type="button" data-action="resetFilter">重置</button>
+              </div>
+            </section>
+
+            <div class="reminder-layout">
+              <section class="reminder-focus-card">
+                <div class="panel-head">
+                  <h2>优先处理</h2>
+                  <span class="muted">按风险和截止时间排序</span>
+                </div>
+                <article class="reminder-card is-urgent" data-action="reminderDetail" role="button" tabindex="0">
+                  <b>逾期 2 天</b>
+                  <strong>网络安全态势感知平台</strong>
+                  <p>预算测算表未补齐，立项审核无法继续。</p>
+                  <div><span>责任人：张工</span><span>阶段：立项审核</span></div>
+                  <footer>
+                    <button class="plain-btn" type="button" data-action="reminderDetail">详情</button>
+                    <button class="ghost-btn" type="button" data-action="quickProcess">去处理</button>
+                  </footer>
+                </article>
+                <article class="reminder-card" data-action="reminderDetail" role="button" tabindex="0">
+                  <b>今日截止</b>
+                  <strong>数据中心存储扩容</strong>
+                  <p>退回意见未处理，需重新提交预算测算表。</p>
+                  <div><span>责任人：王工</span><span>阶段：立项审核</span></div>
+                  <footer>
+                    <button class="plain-btn" type="button" data-action="reminderDetail">详情</button>
+                    <button class="ghost-btn" type="button" data-action="quickProcess">去处理</button>
+                  </footer>
+                </article>
+              </section>
+
+              <section class="reminder-list-card">
+                <div class="panel-head">
+                  <h2>提醒清单</h2>
+                  <span class="muted">点击查看详情</span>
+                </div>
+                <div class="reminder-table">
+                  <div><span>提醒事项</span><span>项目阶段</span><span>责任人</span><span>截止时间</span><span>操作</span></div>
+                  <div data-action="reminderDetail" role="button" tabindex="0"><strong>补交预算测算表</strong><span>立项审核</span><span>张工</span><span>07-06</span><span><button type="button" data-action="reminderDetail">详情</button><button type="button" data-action="markReminderRead">标记</button></span></div>
+                  <div data-action="reminderDetail" role="button" tabindex="0"><strong>确认采购论证材料</strong><span>新建采购</span><span>李工</span><span>07-08</span><span><button type="button" data-action="reminderDetail">详情</button><button type="button" data-action="quickProcess">处理</button></span></div>
+                  <div data-action="reminderDetail" role="button" tabindex="0"><strong>验收申请待审核</strong><span>验收审核</span><span>陈工</span><span>07-10</span><span><button type="button" data-action="reminderDetail">详情</button><button type="button" data-action="quickProcess">处理</button></span></div>
+                  <div data-action="reminderDetail" role="button" tabindex="0"><strong>归档清单待确认</strong><span>归档</span><span>档案室</span><span>07-12</span><span><button type="button" data-action="reminderDetail">详情</button><button type="button" data-action="markReminderRead">标记</button></span></div>
+                </div>
+              </section>
+            </div>
+          </section>
+        </section>
+
+        <section class="screen" id="systemRoles">
+          <section class="system-page system-subpage">
+            <div class="system-page-head">
+              <div>
+                <span>系统管理</span>
+                <h2>角色管理</h2>
+                <p>维护不同用户能看什么、能办什么，避免申请人和管理人员权限混用。</p>
+              </div>
+              <button class="primary-btn" type="button" data-action="editProject">新增角色</button>
+            </div>
+            <section class="system-card">
+              <div class="system-toolbar">
+                <label><span>角色名称</span><input type="search" placeholder="输入角色名称" /></label>
+                <label><span>状态</span><select><option>全部</option><option>启用</option><option>停用</option></select></label>
+                <button class="primary-btn" type="button" data-action="searchList">查询</button>
+              </div>
+              <div class="system-table role-table">
+                <div><span>角色名称</span><span>数据范围</span><span>主要职责</span><span>状态</span><span>操作</span></div>
+                <div><strong>信息办管理员</strong><span>全量项目</span><span>台账、流程、预算、资料维护</span><em>启用</em><span><button type="button" data-action="editProject">编辑</button><button type="button" data-action="systemManage">权限</button></span></div>
+                <div><strong>项目申报人</strong><span>本人项目</span><span>项目申报、材料补正、进度查看</span><em>启用</em><span><button type="button" data-action="editProject">编辑</button><button type="button" data-action="systemManage">权限</button></span></div>
+                <div><strong>归口负责人</strong><span>归口部门</span><span>立项确认、材料意见、节点协同</span><em>启用</em><span><button type="button" data-action="editProject">编辑</button><button type="button" data-action="systemManage">权限</button></span></div>
+                <div><strong>档案管理员</strong><span>归档项目</span><span>验收归档、结项材料完整性检查</span><em>启用</em><span><button type="button" data-action="editProject">编辑</button><button type="button" data-action="systemManage">权限</button></span></div>
+              </div>
+            </section>
+          </section>
+        </section>
+
+        <section class="screen" id="systemFlow">
+          <section class="system-page system-subpage">
+            <div class="system-page-head">
+              <div>
+                <span>系统管理</span>
+                <h2>流程配置管理</h2>
+                <p>维护信息化项目全流程节点、责任角色、必备材料和提醒规则。</p>
+              </div>
+              <button class="primary-btn" type="button" data-action="fieldConfig">配置节点</button>
+            </div>
+            <section class="system-card">
+              <div class="system-flow-table">
+                <div><span>序号</span><span>流程节点</span><span>责任角色</span><span>必备材料</span><span>提醒规则</span><span>操作</span></div>
+                <div><b>01</b><strong>新建立项</strong><span>申请人</span><span>项目申报书、建设必要性</span><span>草稿 7 天未提交提醒</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
+                <div><b>02</b><strong>立项审核</strong><span>信息办管理员</span><span>预算测算表、归口确认</span><span>退回后 2 天提醒补正</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
+                <div><b>03</b><strong>新建采购</strong><span>采购协同人</span><span>采购论证、合同和供应商材料</span><span>采购材料缺项提醒</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
+                <div><b>04</b><strong>实施</strong><span>项目负责人</span><span>实施计划、会议纪要、阶段报告</span><span>节点到期前 5 天提醒</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
+                <div><b>05</b><strong>试运行</strong><span>项目负责人</span><span>试运行报告、问题整改记录</span><span>试运行结束前提醒</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
+                <div><b>06</b><strong>验收</strong><span>验收负责人</span><span>验收申请、验收意见、签字材料</span><span>验收申请待办提醒</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
+                <div><b>07</b><strong>验收审核</strong><span>信息办管理员</span><span>验收结果、整改确认</span><span>审核超期提醒</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
+                <div><b>08</b><strong>归档</strong><span>档案管理员</span><span>归档移交清单、全量附件</span><span>材料缺失提醒</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
+                <div><b>09</b><strong>退金</strong><span>预算管理员</span><span>资金结余、退金确认</span><span>结余未处理提醒</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
+                <div><b>10</b><strong>结项</strong><span>信息办管理员</span><span>结项确认、项目关闭记录</span><span>归档后自动提醒结项</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
+              </div>
+            </section>
+          </section>
+        </section>
+
+        <section class="screen" id="systemFields">
+          <section class="system-page system-subpage">
+            <div class="system-page-head">
+              <div>
+                <span>系统管理</span>
+                <h2>字段表管理</h2>
+                <p>集中维护项目、预算、材料、审核和归档字段，保证列表、表单和导出口径一致。</p>
+              </div>
+              <button class="primary-btn" type="button" data-action="fieldConfig">新增字段表</button>
+            </div>
+            <section class="system-card">
+              <div class="system-toolbar">
+                <label><span>字段表名称</span><input type="search" placeholder="输入字段表名称" /></label>
+                <label><span>使用页面</span><select><option>全部</option><option>项目申报</option><option>项目台账</option><option>预算管理</option><option>资料维护</option></select></label>
+                <button class="primary-btn" type="button" data-action="searchList">查询</button>
+              </div>
+              <div class="system-table field-table">
+                <div><span>字段表</span><span>字段数</span><span>使用页面</span><span>更新人</span><span>操作</span></div>
+                <div><strong>项目基础字段</strong><span>28</span><span>申报、台账、详情</span><em>信息办</em><span><button type="button" data-action="fieldConfig">字段</button><button type="button" data-action="previewMaterial">预览</button></span></div>
+                <div><strong>预算字段</strong><span>16</span><span>预算管理、立项审核</span><em>预算管理员</em><span><button type="button" data-action="fieldConfig">字段</button><button type="button" data-action="previewMaterial">预览</button></span></div>
+                <div><strong>材料字段</strong><span>22</span><span>资料维护、归档详情</span><em>档案室</em><span><button type="button" data-action="fieldConfig">字段</button><button type="button" data-action="previewMaterial">预览</button></span></div>
+                <div><strong>审核意见字段</strong><span>12</span><span>待办、流程详情</span><em>信息办</em><span><button type="button" data-action="fieldConfig">字段</button><button type="button" data-action="previewMaterial">预览</button></span></div>
+              </div>
+            </section>
+          </section>
+        </section>
+
+        <section class="screen" id="archive">
+          <section class="admin-list-page archive-list-page">
+            <div class="admin-list-title">
+              <h2>归档结项</h2>
+              <p>首页 / 项目过程管理 / 归档结项</p>
+            </div>
+
+            <section class="admin-filter-card">
+              <div class="archive-query-panel">
+                <label><span>项目名称</span><input id="archiveSearch" type="search" placeholder="请输入项目名称" /></label>
+                <label><span>项目编号</span><input id="archiveCodeSearch" type="search" placeholder="请输入项目编号" /></label>
+                <label><span>所属单位</span><select id="archiveDepartment"><option value="all">请选择所属单位</option><option>信息办</option><option>教务处</option><option>资产与实验室管理处</option></select></label>
+                <label><span>收尾状态</span><select id="archiveStatus"><option value="all">请选择收尾状态</option><option>待补齐</option><option>待归档</option><option>待退金</option><option>待结项</option><option>已结项</option></select></label>
+                <label><span>建设年度</span><select id="archiveYear"><option value="all">请选择建设年度</option><option>2026</option><option>2025</option><option>2024</option><option>2023</option><option>2022</option></select></label>
+                <label><span>收尾时间</span><input id="archiveDate" type="text" placeholder="开始日期  ~  结束日期" /></label>
+              </div>
+              <div class="admin-filter-actions">
+                <button class="primary-btn" type="button" data-action="searchList">查询</button>
+                <button class="ghost-btn" type="button" data-action="resetFilter">重置</button>
+              </div>
+            </section>
+
+            <section class="admin-table-card archive-table-card">
+              <div class="table-card-toolbar">
+                <button class="ghost-btn" type="button" data-action="exportReport">导出</button>
+              </div>
+              <div class="archive-table" id="archiveRows"></div>
+              <div class="table-pagination">
+                <span>共 28 条</span>
+                <div>
+                  <button type="button">10 条/页</button>
+                  <button type="button">‹</button>
+                  <button class="is-active" type="button">1</button>
+                  <button type="button">2</button>
+                  <button type="button">3</button>
+                  <button type="button">›</button>
+                  <span>前往</span><input value="1" /><span>页</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="archive-detail-strip">
+              <div class="archive-score" id="archiveScore">0%</div>
+              <div>
+                <h2 id="archiveProjectTitle">请选择项目</h2>
+                <span id="archiveProjectMeta" class="archive-meta">点击表格“查看”后展示归档、退金和结项预检情况</span>
+                <p id="archiveCopy">请选择左侧项目。</p>
+              </div>
+              <button class="primary-btn" type="button" id="archivePack" data-action="archivePack">生成预检清单</button>
+              <section class="materials" id="materialsList" aria-label="材料清单"></section>
+            </section>
+          </section>
+        </section>
+
+        <section class="screen" id="templates">
+          <section class="panel template-panel">
+            <div class="panel-head">
+              <h2>模板中心</h2>
+              <span class="muted-note" id="templateStageNote">用户端仅提供资料查看、模板下载和带入申报。</span>
+            </div>
+            <div class="material-stage-toolbar" id="materialStageToolbar" aria-label="资料阶段">
+              <button class="chip is-active" type="button" data-prep-filter="apply">申报前</button>
+              <button class="chip" type="button" data-prep-filter="budget">预算口径</button>
+              <button class="chip" type="button" data-prep-filter="purchase">采购阶段</button>
+              <button class="chip" type="button" data-prep-filter="archive">验收归档</button>
+            </div>
+            <div class="template-filter-row">
+              <label class="field"><span>模板名称</span><input id="templateSearch" type="search" placeholder="搜索申报、预算、验收材料" /></label>
+              <div class="chip-row" id="templateFilter">
+                <button type="button" class="chip is-active" data-template="all">全部</button>
+                <button type="button" class="chip" data-template="申报">申报</button>
+                <button type="button" class="chip" data-template="采购">采购</button>
+                <button type="button" class="chip" data-template="验收">验收</button>
+                <button type="button" class="chip" data-template="归档">归档</button>
+              </div>
+            </div>
+            <div class="template-block-head">
+              <h2>模板/清单列表</h2>
+              <span>点击可下载文件或带入申报单。</span>
+            </div>
+            <div class="template-grid" id="templateGrid"></div>
+          </section>
+        </section>
+
+        <section class="screen" id="leader">
+          <section class="analytics-page">
+            <div class="analytics-head">
+              <h2>统计分析</h2>
+              <div class="analytics-filters">
+                <button type="button">2024-01-01 ~ 2024-12-31</button>
+                <button type="button">全部单位</button>
+                <button class="primary-btn" type="button" data-action="exportReport">导出</button>
+              </div>
+            </div>
+
+            <div class="metric-grid">
+              <button class="metric-card" type="button" data-action="statTotal"><img src="./assets/icon-apply.png" alt="" /><div><span>项目总数</span><strong>78</strong><em>较去年 ↑ 18.2%</em></div></button>
+              <button class="metric-card" type="button" data-action="statApproved"><img src="./assets/icon-shield.png" alt="" /><div><span>已立项项目</span><strong>45</strong><em>较去年 ↑ 16.7%</em></div></button>
+              <button class="metric-card" type="button" data-action="statBuilding"><img src="./assets/icon-progress.png" alt="" /><div><span>建设中项目</span><strong>24</strong><em>较去年 ↑ 9.1%</em></div></button>
+              <button class="metric-card" type="button" data-action="statCompleted"><img src="./assets/icon-material.png" alt="" /><div><span>已完成项目</span><strong>9</strong><em>较去年 ↑ 28.6%</em></div></button>
+              <button class="metric-card" type="button" data-action="statInvestment"><img src="./assets/icon-database.png" alt="" /><div><span>项目总投资</span><strong>3,245.80<span>万</span></strong><em>较去年 ↑ 21.3%</em></div></button>
+            </div>
+
+            <div class="analytics-grid">
+              <article class="chart-card">
+                <h3>项目状态分布</h3>
+                <div class="donut-row">
+                  <div class="donut-chart"><strong>78</strong><span>项目总数</span></div>
+                  <div class="chart-legend">
+                    <span><i class="blue"></i>已立项（45）</span>
+                    <span><i class="orange"></i>建设中（24）</span>
+                    <span><i class="green"></i>已完成（9）</span>
+                  </div>
+                </div>
+              </article>
+
+              <article class="chart-card">
+                <h3>项目投资金额分布（万元）</h3>
+                <div class="bar-chart vertical-bars axis-bars investment-bars">
+                  <span class="bar-axis-label y-max">900</span>
+                  <span class="bar-axis-label y-mid">450</span>
+                  <span class="bar-axis-label y-zero">0</span>
+                  <div style="--h: 22%"><b>186.50</b><i></i><span>0-20万</span><em>24 个</em></div>
+                  <div style="--h: 85%"><b>724.60</b><i></i><span>20-50万</span><em>21 个</em></div>
+                  <div style="--h: 100%"><b>848.30</b><i></i><span>50-100万</span><em>17 个</em></div>
+                  <div style="--h: 80%"><b>682.40</b><i></i><span>100-200万</span><em>10 个</em></div>
+                  <div style="--h: 18%"><b>154.00</b><i></i><span>200-500万</span><em>5 个</em></div>
+                  <div style="--h: 77%"><b>650.00</b><i></i><span>500万以上</span><em>1 个</em></div>
+                </div>
+                <div class="investment-sample-grid" aria-label="项目投资测试数据">
+                  <div><span>总项目</span><strong>78 个</strong></div>
+                  <div><span>总投资</span><strong>3,245.80 万</strong></div>
+                  <div><span>平均金额</span><strong>41.61 万</strong></div>
+                  <div><span>高额项目</span><strong>1 个 / 650.00 万</strong></div>
+                </div>
+                <div class="investment-sample-table">
+                  <div><span>区间</span><span>项目数</span><span>金额</span><span>代表项目</span></div>
+                  <div><strong>0-20万</strong><span>24</span><span>186.50 万</span><span>机房零星改造、插件授权</span></div>
+                  <div><strong>20-50万</strong><span>21</span><span>724.60 万</span><span>日志审计、数据接口服务</span></div>
+                  <div><strong>50-100万</strong><span>17</span><span>848.30 万</span><span>态势感知、存储扩容</span></div>
+                  <div><strong>100万以上</strong><span>16</span><span>1,486.40 万</span><span>出口链路、数据中心升级</span></div>
+                </div>
+              </article>
+
+              <article class="chart-card">
+                <h3>项目立项趋势</h3>
+                <svg class="line-chart" viewBox="0 0 520 220" role="img" aria-label="项目立项趋势">
+                  <g class="chart-grid">
+                    <line x1="42" y1="38" x2="500" y2="38" />
+                    <line x1="42" y1="78" x2="500" y2="78" />
+                    <line x1="42" y1="118" x2="500" y2="118" />
+                    <line x1="42" y1="158" x2="500" y2="158" />
+                    <line x1="42" y1="190" x2="500" y2="190" />
+                  </g>
+                  <g class="axis-lines">
+                    <line x1="42" y1="28" x2="42" y2="190" />
+                    <line x1="42" y1="190" x2="500" y2="190" />
+                  </g>
+                  <g class="y-axis">
+                    <text x="10" y="42">15</text>
+                    <text x="10" y="82">12</text>
+                    <text x="16" y="122">9</text>
+                    <text x="16" y="162">6</text>
+                    <text x="16" y="194">0</text>
+                  </g>
+                  <polyline points="28,170 70,152 112,108 154,116 196,84 238,72 280,102 322,84 364,58 406,42 448,64 490,80" />
+                  <polyline class="line-secondary" points="28,188 70,176 112,142 154,142 196,124 238,104 280,124 322,104 364,84 406,58 448,92 490,112" />
+                  <g class="x-axis">
+                    <text x="26" y="212">1月</text><text x="106" y="212">3月</text><text x="194" y="212">5月</text><text x="282" y="212">7月</text><text x="370" y="212">9月</text><text x="454" y="212">11月</text>
+                  </g>
+                </svg>
+              </article>
+
+              <article class="chart-card">
+                <div class="chart-title-row"><h3>项目按单位分布（个）</h3><button type="button" data-action="viewDetail" data-detail="unitStatsDetail">更多 ›</button></div>
+                <div class="bar-chart horizontal-bars">
+                  <div style="--w: 82%"><span>信息化办公室</span><i></i><b>18</b></div>
+                  <div style="--w: 66%"><span>教务处</span><i></i><b>12</b></div>
+                  <div style="--w: 45%"><span>学生处</span><i></i><b>8</b></div>
+                  <div style="--w: 40%"><span>图文信息中心</span><i></i><b>7</b></div>
+                  <div style="--w: 34%"><span>科研处</span><i></i><b>6</b></div>
+                </div>
+              </article>
+            </div>
+
+            <section class="chart-card analytics-table-card">
+              <div class="chart-title-row"><h3>项目完成情况统计</h3><button type="button" data-action="viewDetail" data-detail="completionStatsDetail">更多 ›</button></div>
+              <div class="analytics-table">
+                <div><span>单位</span><span>项目总数</span><span>已完成</span><span>完成率</span><span>较去年同期</span></div>
+                <div><strong>信息化办公室</strong><span>18</span><span>3</span><span><i style="--w: 16.7%"></i>16.7%</span><em>↑ 12.5%</em></div>
+                <div><strong>教务处</strong><span>12</span><span>2</span><span><i style="--w: 16.7%"></i>16.7%</span><em>-</em></div>
+                <div><strong>学生处</strong><span>8</span><span>1</span><span><i style="--w: 12.5%"></i>12.5%</span><em>↑ 5.0%</em></div>
+                <div><strong>图文信息中心</strong><span>7</span><span>2</span><span><i style="--w: 28.6%"></i>28.6%</span><em>↑ 41.7%</em></div>
+              </div>
+            </section>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <section class="detail-drawer" id="detailDrawer" aria-hidden="true">
+      <button class="detail-backdrop" type="button" data-close-detail aria-label="关闭详情"></button>
+      <aside class="detail-panel" aria-label="详情">
+        <button class="detail-close" type="button" data-close-detail>×</button>
+        <span id="detailEyebrow">项目详情</span>
+        <h2 id="detailTitle">网络安全态势感知平台</h2>
+        <p id="detailMeta">XXH2026001 · 信息办 · 2026</p>
+        <div class="detail-body" id="detailBody"></div>
+      </aside>
+    </section>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="./app.js?v=20260705-10"></script>
+  </body>
+</html>

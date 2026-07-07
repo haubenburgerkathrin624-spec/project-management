@@ -1,0 +1,7 @@
+.DS_Store
+*.tmp
+*.log
+.faster-whisper-models/
+.hf-cache/
+.transcribe-venv/
+project-management-git-ready/
