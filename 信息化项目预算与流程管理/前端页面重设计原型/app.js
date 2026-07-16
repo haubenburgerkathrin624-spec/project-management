@@ -2411,14 +2411,14 @@ function submitApplicationFlowFromButton(button) {
 function processInheritedCards(stage) {
   const cards = [
     "",
-    `<details class="process-history-card"><summary><span>采购与合同信息</span><b>展开查看</b></summary><div class="process-history-fields"><div><span>采购方式</span><strong>校内论证后采购</strong></div><div><span>采购金额</span><strong>82 万</strong></div><div><span>合同名称</span><strong>网络安全态势感知平台建设合同</strong></div><div><span>合同日期</span><strong>2026-08-20</strong></div><div><span>供应商</span><strong>上海某信息技术有限公司</strong></div><div><span>履约保证金</span><strong>4.1 万</strong></div></div><div class="process-history-files"><span>采购申请流程文件.pdf</span><button type="button" data-action="previewMaterial">预览</button><span>盖章合同.pdf</span><button type="button" data-action="previewMaterial">预览</button></div></details>`,
-    `<details class="process-history-card"><summary><span>实施与付款记录</span><b>展开查看</b></summary><div class="process-history-fields"><div><span>启动日期</span><strong>2026-09-01</strong></div><div><span>实施负责人</span><strong>王工</strong></div><div><span>已付款合计</span><strong>24.6 万</strong></div><div><span>阶段结论</span><strong>系统建设和联调完成</strong></div></div><div class="process-history-files"><span>启动会纪要.pdf</span><button type="button" data-action="previewMaterial">预览</button><span>付款审批单.pdf</span><button type="button" data-action="previewMaterial">预览</button></div></details>`,
-    `<details class="process-history-card"><summary><span>试运行信息</span><b>展开查看</b></summary><div class="process-history-fields"><div><span>开始时间</span><strong>2026-11-01</strong></div><div><span>结束时间</span><strong>2026-11-30</strong></div><div><span>试运行结论</span><strong>稳定，可申请验收</strong></div><div><span>问题整改</span><strong>已关闭</strong></div></div><div class="process-history-files"><span>培训记录.xlsx</span><button type="button" data-action="previewMaterial">预览</button><span>试运行报告.docx</span><button type="button" data-action="previewMaterial">预览</button></div></details>`,
-    `<details class="process-history-card"><summary><span>验收信息</span><b>展开查看</b></summary><div class="process-history-fields"><div><span>验收方式</span><strong>专家验收</strong></div><div><span>验收结论</span><strong>通过</strong></div><div><span>质保期开始</span><strong>2026-12-20</strong></div><div><span>整改记录</span><strong>已完成</strong></div></div><div class="process-history-files"><span>验收审批表.pdf</span><button type="button" data-action="previewMaterial">预览</button><span>专家验收意见.pdf</span><button type="button" data-action="previewMaterial">预览</button></div></details>`,
-    `<details class="process-history-card"><summary><span>退履约保证金</span><b>展开查看</b></summary><div class="process-history-fields"><div><span>保证金金额</span><strong>4.1 万</strong></div><div><span>退还状态</span><strong>待退还确认</strong></div><div><span>合同编号</span><strong>HT202608012</strong></div><div><span>责任部门</span><strong>财务处</strong></div></div><div class="process-history-files"><span>退保证金申请表.pdf</span><button type="button" data-action="previewMaterial">预览</button><span>合同保证金核对表.xlsx</span><button type="button" data-action="previewMaterial">预览</button></div></details>`
+    `<details class="process-extra-card process-history-section"><summary><span>采购与合同信息</span><b>展开查看</b></summary><div class="process-history-fields"><div><span>采购方式</span><strong>校内论证后采购</strong></div><div><span>采购金额</span><strong>82 万</strong></div><div><span>合同名称</span><strong>网络安全态势感知平台建设合同</strong></div><div><span>合同日期</span><strong>2026-08-20</strong></div><div><span>供应商</span><strong>上海某信息技术有限公司</strong></div><div><span>履约保证金</span><strong>4.1 万</strong></div></div><div class="process-history-files"><span>采购申请流程文件.pdf</span><button type="button" data-action="previewMaterial">预览</button><span>盖章合同.pdf</span><button type="button" data-action="previewMaterial">预览</button></div></details>`,
+    `<details class="process-extra-card process-history-section"><summary><span>实施与付款记录</span><b>展开查看</b></summary><div class="process-history-fields"><div><span>启动日期</span><strong>2026-09-01</strong></div><div><span>实施负责人</span><strong>王工</strong></div><div><span>已付款合计</span><strong>24.6 万</strong></div><div><span>阶段结论</span><strong>系统建设和联调完成</strong></div></div><div class="process-history-files"><span>启动会纪要.pdf</span><button type="button" data-action="previewMaterial">预览</button><span>付款审批单.pdf</span><button type="button" data-action="previewMaterial">预览</button></div></details>`,
+    `<details class="process-extra-card process-history-section"><summary><span>试运行信息</span><b>展开查看</b></summary><div class="process-history-fields"><div><span>开始时间</span><strong>2026-11-01</strong></div><div><span>结束时间</span><strong>2026-11-30</strong></div><div><span>试运行结论</span><strong>稳定，可申请验收</strong></div><div><span>问题整改</span><strong>已关闭</strong></div></div><div class="process-history-files"><span>培训记录.xlsx</span><button type="button" data-action="previewMaterial">预览</button><span>试运行报告.docx</span><button type="button" data-action="previewMaterial">预览</button></div></details>`,
+    `<details class="process-extra-card process-history-section"><summary><span>验收信息</span><b>展开查看</b></summary><div class="process-history-fields"><div><span>验收方式</span><strong>专家验收</strong></div><div><span>验收结论</span><strong>通过</strong></div><div><span>质保期开始</span><strong>2026-12-20</strong></div><div><span>整改记录</span><strong>已完成</strong></div></div><div class="process-history-files"><span>验收审批表.pdf</span><button type="button" data-action="previewMaterial">预览</button><span>专家验收意见.pdf</span><button type="button" data-action="previewMaterial">预览</button></div></details>`,
+    `<details class="process-extra-card process-history-section"><summary><span>退履约保证金</span><b>展开查看</b></summary><div class="process-history-fields"><div><span>保证金金额</span><strong>4.1 万</strong></div><div><span>退还状态</span><strong>待退还确认</strong></div><div><span>合同编号</span><strong>HT202608012</strong></div><div><span>责任部门</span><strong>财务处</strong></div></div><div class="process-history-files"><span>退保证金申请表.pdf</span><button type="button" data-action="previewMaterial">预览</button><span>合同保证金核对表.xlsx</span><button type="button" data-action="previewMaterial">预览</button></div></details>`
   ];
   if (stage <= 1) return "";
-  return `<div class="process-history-stack">${cards.slice(1, stage).join("")}</div>`;
+  return cards.slice(1, stage).join("");
 }
 
 function initiationProcessExtraMarkup(stage) {
@@ -2441,7 +2441,6 @@ function initiationProcessExtraMarkup(stage) {
       </section>
     `,
     `
-      ${processInheritedCards(stage)}
       <section class="process-extra-card">
         <h3>实施与付款记录</h3>
         <div class="form-grid form-grid-3">
@@ -2465,7 +2464,6 @@ function initiationProcessExtraMarkup(stage) {
       </section>
     `,
     `
-      ${processInheritedCards(stage)}
       <section class="process-extra-card">
         <h3>试运行信息</h3>
         <div class="form-grid form-grid-3">
@@ -2477,7 +2475,6 @@ function initiationProcessExtraMarkup(stage) {
       </section>
     `,
     `
-      ${processInheritedCards(stage)}
       <section class="process-extra-card">
         <h3>验收申请与验收过程</h3>
         <div class="acceptance-branch-grid">
@@ -2492,7 +2489,6 @@ function initiationProcessExtraMarkup(stage) {
       </section>
     `,
     `
-      ${processInheritedCards(stage)}
       <section class="process-extra-card">
         <h3>退履约保证金判断</h3>
         <div class="form-grid form-grid-3">
@@ -2503,7 +2499,6 @@ function initiationProcessExtraMarkup(stage) {
       </section>
     `,
     `
-      ${processInheritedCards(stage)}
       <section class="process-extra-card">
         <h3>归档材料池</h3>
         <div class="archive-auto-grid">
@@ -2557,6 +2552,8 @@ function renderInitiationFlow() {
     `;
   }
   const extra = $("#initiationProcessExtra");
+  const inheritedExtra = $("#initiationInheritedExtra");
+  if (inheritedExtra) inheritedExtra.innerHTML = processInheritedCards(stage);
   if (extra) {
     extra.innerHTML = initiationProcessExtraMarkup(stage);
     extra.querySelector("[data-action='addPaymentRecord']")?.addEventListener("click", (event) => {
@@ -2566,6 +2563,17 @@ function renderInitiationFlow() {
       showToast("已打开新增付款。");
     });
   }
+  $$("#initiationFormPanel [data-action='addTeamRole'], #initiationFormPanel [data-action='addMilestone']").forEach((button) => {
+    if (button.dataset.directBound === "true") return;
+    button.dataset.directBound = "true";
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const isMember = button.dataset.action === "addTeamRole";
+      const opened = isMember ? addTeamRoleCard(button) : addMilestoneRow(button);
+      if (opened) showToast(isMember ? "已打开新增成员。" : "已打开新增里程碑。");
+    });
+  });
 }
 
 function advanceInitiationFlow() {

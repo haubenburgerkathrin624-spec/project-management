@@ -8547,10 +8547,42 @@ body[data-screen="portal"] .quick-panel {
   margin-top: 10px;
 }
 
-.process-history-stack {
+#initiationInheritedExtra {
   display: grid;
   gap: 8px;
-  margin: 0 0 12px;
+  margin-top: 12px;
+}
+
+.process-history-section {
+  margin-top: 0;
+  padding: 0 14px;
+}
+
+.process-history-section summary {
+  list-style: none;
+}
+
+.process-history-section summary::-webkit-details-marker {
+  display: none;
+}
+
+.process-history-section summary::before {
+  content: "＋";
+  display: inline-flex;
+  width: 18px;
+  color: #1d67e8;
+  font-size: 14px;
+}
+
+.process-history-section[open] summary::before {
+  content: "－";
+}
+
+.process-history-section summary,
+.process-history-section .process-history-fields,
+.process-history-section .process-history-files {
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .process-history-card {
@@ -8560,10 +8592,10 @@ body[data-screen="portal"] .quick-panel {
   padding: 0 12px;
 }
 
-.process-history-card summary {
+.process-history-section summary {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 12px;
   cursor: pointer;
   padding: 10px 0;
@@ -8572,24 +8604,32 @@ body[data-screen="portal"] .quick-panel {
   font-weight: 800;
 }
 
-.process-history-card summary b {
+.process-history-section > summary > span {
+  flex: 1;
+}
+
+.process-history-section > summary > b {
+  margin-left: auto;
+}
+
+.process-history-section summary b {
   color: #1d67e8;
   font-size: 12px;
 }
 
-.process-history-card[open] summary b {
+.process-history-section[open] summary b {
   color: #64748b;
 }
 
-.process-history-card[open] summary b::before {
+.process-history-section[open] summary b::before {
   content: "收起";
 }
 
-.process-history-card[open] summary b {
+.process-history-section[open] summary b {
   font-size: 0;
 }
 
-.process-history-card[open] summary b::before {
+.process-history-section[open] summary b::before {
   font-size: 12px;
 }
 
