@@ -3297,6 +3297,7 @@ function resetMyProjectFilters() {
 
 function openInitiationDialog() {
   state.initiationStage = 0;
+  state.applicationBudgetAmount = null;
   state.initiationHasDeposit = true;
   state.initiationNeedsSpecialAcceptance = false;
   state.initiationSpecialAcceptanceSubmitted = false;
