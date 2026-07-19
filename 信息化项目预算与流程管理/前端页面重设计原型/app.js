@@ -123,10 +123,21 @@ const state = {
   wizardStep: 0,
   applicationStage: 0,
   applicationDecision: "agree",
+  applicationBudgetAmount: null,
+  applicationBranch: {
+    standardConclusion: "待确认",
+    expertConclusion: "待确认",
+    schoolConclusion: "待确认"
+  },
   applicationApprovals: [],
   applicationReturnScreen: "applyWizard",
   initiationStage: 0,
   initiationUseLibrary: "yes",
+  initiationHasDeposit: true,
+  initiationNeedsSpecialAcceptance: false,
+  initiationSpecialAcceptanceSubmitted: false,
+  initiationAcceptanceSubmitted: false,
+  initiationSkippedRefund: false,
   manageTab: "business",
   selectedProgressNode: "approval",
   selectedFullProcessNode: "approval",
@@ -148,9 +159,9 @@ const applicationStandardStageMeta = [
 const applicationExpertStageMeta = [
   { label: "申请人申报", actor: "张老师", button: "确认提交", placeholder: "提交后流转到所在部门审核。" },
   { label: "所在部门审核", actor: "王主任", button: "确认审核", placeholder: "请填写所在部门审核意见。" },
-  { label: "信息中心审核", actor: "信息中心李老师", button: "进入专家评审", placeholder: "项目预算达到专家评审口径，确认后进入专家论证。" },
-  { label: "专家论证", actor: "评审专家", button: "进入学校评审", placeholder: "请填写专家论证意见。" },
-  { label: "学校评审", actor: "学校评审会", button: "进入入库确认", placeholder: "请填写学校评审结论。" },
+  { label: "信息中心审核", actor: "信息中心李老师", button: "进入专家论证", placeholder: "项目预算达到 10 万元及以上，确认后进入专家论证。" },
+  { label: "专家论证", actor: "评审专家", button: "提交专家论证", placeholder: "请完成专家论证并填写结论。" },
+  { label: "学校评审", actor: "学校评审会", button: "提交学校评审", placeholder: "请完成学校评审并填写结论。" },
   { label: "确认入库", actor: "信息办管理员", button: "确认入库", placeholder: "请填写入库确认意见。" }
 ];
 
@@ -165,8 +176,25 @@ function applicationBudgetAmount() {
   return Number(value.replace(/[^\d.]/g, "")) || 0;
 }
 
+function projectBudgetAmount() {
+  if (Number.isFinite(state.applicationBudgetAmount) && state.applicationBudgetAmount > 0) return state.applicationBudgetAmount;
+  const initiationValue = $("#initiationBudgetAmount")?.value || "0";
+  return Number(initiationValue.replace(/[^\d.]/g, "")) || applicationBudgetAmount();
+}
+
 function applicationUsesExpertReview() {
   return applicationBudgetAmount() >= 100000;
+}
+
+function initiationUsesExpertAcceptance() {
+  return projectBudgetAmount() >= 100000;
+}
+
+function initiationMaterialFiles(stage) {
+  if (stage === 5 && state.initiationNeedsSpecialAcceptance && !state.initiationSpecialAcceptanceSubmitted) {
+    return ["特殊验收证明文件", "特殊验收材料包"];
+  }
+  return initiationStageMeta[stage]?.material.split("、") || [];
 }
 
 function applicationFlowStages() {
@@ -2248,6 +2276,69 @@ function renderApplicationAttachmentTable(readOnly = false) {
   `;
 }
 
+function applicationBranchReviewMarkup(stage, readOnly = false) {
+  const expert = applicationUsesExpertReview();
+  const conclusion = expert
+    ? stage === 3 ? state.applicationBranch.expertConclusion : state.applicationBranch.schoolConclusion
+    : state.applicationBranch.standardConclusion;
+  if ((!expert && stage !== 3) || (expert && ![3, 4].includes(stage))) return "";
+  const title = expert
+    ? stage === 3 ? "10 万元及以上：专家论证" : "10 万元及以上：学校评审"
+    : "10 万元以下：论证/评审入库";
+  const description = readOnly
+    ? expert ? stage === 3 ? "查看专家论证材料与论证结论。" : "查看学校评审材料与评审结论。" : "查看论证/评审材料与入库结论。"
+    : expert
+    ? stage === 3 ? "请上传专家论证材料并确认论证结论，完成后进入学校评审。" : "请上传学校评审材料并确认评审结论，完成后进入入库确认。"
+    : "请上传论证/评审材料并确认结论，通过后进入项目库。";
+  const field = expert ? stage === 3 ? "expertConclusion" : "schoolConclusion" : "standardConclusion";
+  const materialStatus = readOnly ? "已上传" : "待上传";
+  return `
+    <section class="library-branch-review application-branch-review ${readOnly ? "is-readonly" : ""}">
+      <article>
+        <h4>${title}</h4>
+        <p>${description}</p>
+        <div class="application-branch-file">
+          <span>${expert ? stage === 3 ? "专家论证材料" : "学校评审材料" : "论证/评审材料"}</span>
+          <em>${materialStatus}</em>
+          ${readOnly ? "" : `<button type="button" data-action="uploadProjectAttachment">上传材料</button>`}
+          <button type="button" data-action="previewMaterial">查看</button>
+        </div>
+        <label class="application-branch-conclusion">
+          <span>本节点结论</span>
+          <select data-application-branch-field="${field}" ${readOnly ? "disabled" : ""}>
+            <option value="待确认" ${conclusion === "待确认" ? "selected" : ""}>待确认</option>
+            <option value="通过" ${conclusion === "通过" ? "selected" : ""}>通过</option>
+            <option value="退回修改" ${conclusion === "退回修改" ? "selected" : ""}>退回修改</option>
+            <option value="不通过" ${conclusion === "不通过" ? "selected" : ""}>不通过</option>
+          </select>
+        </label>
+      </article>
+    </section>
+  `;
+}
+
+function bindApplicationBranchFields(readOnly = false) {
+  $$("[data-application-branch-field]").forEach((field) => {
+    if (field.dataset.directBound === "true") return;
+    field.dataset.directBound = "true";
+    field.disabled = readOnly;
+    field.addEventListener("change", () => {
+      state.applicationBranch[field.dataset.applicationBranchField] = field.value;
+    });
+  });
+}
+
+function applicationBranchConclusionPassed(stage) {
+  if (applicationUsesExpertReview()) {
+    return stage === 3
+      ? state.applicationBranch.expertConclusion === "通过"
+      : stage === 4
+        ? state.applicationBranch.schoolConclusion === "通过"
+        : true;
+  }
+  return stage === 3 ? state.applicationBranch.standardConclusion === "通过" : true;
+}
+
 function openApplicationReadonlyDetail(returnScreen = state.screen || "manage") {
   openApplicationForm("readonly", { returnScreen });
   showToast("已打开只读详情页。");
@@ -2312,6 +2403,10 @@ function renderApplicationFlow() {
   if (opinion && isReview) opinion.placeholder = meta.placeholder;
   const approvalPanel = $("#applicationApprovalPane .approval-panel");
   approvalPanel?.querySelector(".library-branch-review")?.remove();
+  if (approvalPanel && isReview) {
+    approvalPanel.insertAdjacentHTML("afterbegin", applicationBranchReviewMarkup(stage, isReadonlyMode));
+    bindApplicationBranchFields(isReadonlyMode);
+  }
   const submit = $("#applicationFlowSubmit");
   const returnButton = $("#applicationReturnBtn");
   const rejectButton = $("#applicationRejectBtn");
@@ -2364,6 +2459,7 @@ function submitApplicationFlow() {
   const stages = applicationFlowStages();
   const finalStage = stages.length - 1;
   if (stage === 0) {
+    state.applicationBudgetAmount = applicationBudgetAmount();
     state.applicationStage = 1;
     state.applicationDecision = "agree";
     renderApplicationFlow();
@@ -2372,6 +2468,11 @@ function submitApplicationFlow() {
   }
   if (stage < finalStage) {
     const decision = state.applicationDecision || "agree";
+    if (decision === "agree" && !applicationBranchConclusionPassed(stage)) {
+      renderApplicationFlow();
+      showToast("请先完成本节点结论，选择“通过”后再进入下一环节。");
+      return;
+    }
     appendApplicationApproval(applicationDecisionText[decision]);
     if (decision === "return") {
       state.applicationStage = 0;
@@ -2422,6 +2523,12 @@ function processInheritedCards(stage) {
 }
 
 function initiationProcessExtraMarkup(stage) {
+  const acceptanceMode = initiationUsesExpertAcceptance() ? "expert" : "self";
+  const acceptanceLabel = acceptanceMode === "expert" ? "10 万元及以上专家验收" : "10 万元以下自行验收";
+  const acceptanceDescription = acceptanceMode === "expert"
+    ? "网信办确认材料后，由网信办组织专家验收并上传验收意见。"
+    : "网信办确认材料后，由申请人自行组织验收并上传验收材料。";
+  const specialAcceptancePending = state.initiationNeedsSpecialAcceptance && !state.initiationSpecialAcceptanceSubmitted;
   const panels = [
     "",
     `
@@ -2434,7 +2541,7 @@ function initiationProcessExtraMarkup(stage) {
           <label><span>合同名称</span><input value="网络安全态势感知平台建设合同" /></label>
           <label><span>合同金额</span><input value="82 万" /></label>
           <label><span>合同日期</span><input value="2026-08-20" /></label>
-          <label><span>是否有履约保证金</span><select><option>有</option><option>无，后续自动跳过退保</option></select></label>
+          <label><span>是否有履约保证金</span><select id="initiationDepositSelect"><option value="yes" ${state.initiationHasDeposit ? "selected" : ""}>有</option><option value="no" ${!state.initiationHasDeposit ? "selected" : ""}>无，后续自动跳过退保</option></select></label>
           <label><span>保证金金额</span><input value="4.1 万" /></label>
           <label><span>供应商</span><input value="上海某信息技术有限公司" /></label>
         </div>
@@ -2478,24 +2585,36 @@ function initiationProcessExtraMarkup(stage) {
       <section class="process-extra-card">
         <h3>验收申请与验收过程</h3>
         <div class="acceptance-branch-grid">
-          <article><span>10 万以下</span><strong>网信办确认材料后，申请人自行验收并补验收材料。</strong></article>
-          <article><span>10 万以上</span><strong>网信办安排专家验收，填写验收时间/方式后通知申请人参加。</strong></article>
+          <article><h4>当前验收分支</h4><p>${acceptanceLabel}</p><strong>${acceptanceDescription}</strong></article>
+          <article><h4>验收后去向</h4><p>先判断特殊验收和履约保证金，再决定进入退保或直接归档。</p></article>
         </div>
         <div class="form-grid form-grid-3">
-          <label><span>验收方式</span><select><option>10 万以上专家验收</option><option>10 万以下自行验收</option></select></label>
+          <label><span>验收方式</span><select id="initiationAcceptanceMode" disabled><option>${acceptanceLabel}</option></select></label>
           <label><span>专家验收时间</span><input value="2026-12-15 14:00" /></label>
           <label><span>质保期开始时间</span><input value="2026-12-20" /></label>
+        </div>
+        <div class="process-decision-panel">
+          <h4>验收后分流判断</h4>
+          <div class="form-grid form-grid-3">
+            <label><span>是否需要特殊验收</span><select id="initiationSpecialAcceptanceSelect"><option value="no" ${!state.initiationNeedsSpecialAcceptance ? "selected" : ""}>否</option><option value="yes" ${state.initiationNeedsSpecialAcceptance ? "selected" : ""}>是</option></select></label>
+            <label><span>是否有履约保证金</span><select id="initiationDepositDecision"><option value="yes" ${state.initiationHasDeposit ? "selected" : ""}>有，进入退保判断</option><option value="no" ${!state.initiationHasDeposit ? "selected" : ""}>无，自动跳过退保</option></select></label>
+          </div>
+          <p>无特殊验收且无履约保证金时，提交验收审批后自动跳过退履约保金，进入归档。</p>
         </div>
       </section>
     `,
     `
       <section class="process-extra-card">
-        <h3>退履约保证金判断</h3>
-        <div class="form-grid form-grid-3">
-          <label><span>合同是否有履约保证金</span><select><option>有，进入退保节点</option><option>无，自动跳过至归档</option></select></label>
-          <label><span>保证金金额</span><input value="4.1 万" /></label>
-          <label><span>特殊验收</span><select><option>无</option><option>特殊项目退保前需额外验收</option></select></label>
-        </div>
+        <h3>${specialAcceptancePending ? "特殊验收材料" : "退履约保证金判断"}</h3>
+        ${specialAcceptancePending ? `
+          <div class="application-note">当前项目需要先完成特殊验收。提交特殊验收材料后，${state.initiationHasDeposit ? "再进入退履约保证金确认" : "将自动跳过退履约保证金并进入归档"}。</div>
+        ` : `
+          <div class="form-grid form-grid-3">
+            <label><span>合同是否有履约保证金</span><select id="initiationDepositRefundDecision"><option value="yes" ${state.initiationHasDeposit ? "selected" : ""}>有，进入退保节点</option><option value="no" ${!state.initiationHasDeposit ? "selected" : ""}>无，自动跳过至归档</option></select></label>
+            <label><span>保证金金额</span><input value="4.1 万" ${state.initiationHasDeposit ? "" : "disabled"} /></label>
+            <label><span>退还状态</span><select ${state.initiationHasDeposit ? "" : "disabled"}><option>待财务确认</option><option>已退还</option></select></label>
+          </div>
+        `}
       </section>
     `,
     `
@@ -2519,18 +2638,25 @@ function renderInitiationFlow() {
     const itemStage = Number(item.dataset.initiationStage);
     item.classList.toggle("is-current", itemStage === stage);
     item.classList.toggle("is-done", itemStage < stage);
+    item.classList.toggle("is-skipped", state.initiationSkippedRefund && itemStage === 5);
   });
   const submit = $("#initiationFlowSubmit");
-  if (submit) submit.textContent = meta.button;
+  if (submit) submit.textContent = stage === 5 && state.initiationNeedsSpecialAcceptance && !state.initiationSpecialAcceptanceSubmitted
+    ? "提交特殊验收材料"
+    : meta.button;
   const title = $("#initiationProcessTitle");
-  if (title) title.textContent = `${meta.label}材料`;
+  if (title) title.textContent = stage === 5 && state.initiationNeedsSpecialAcceptance && !state.initiationSpecialAcceptanceSubmitted
+    ? "特殊验收材料"
+    : `${meta.label}材料`;
   const hint = $("#initiationProcessHint");
   if (hint) {
     hint.textContent = stage === 0
       ? "提交立项后，项目将依次进入采购、实施、试运行、验收、退履约保金和归档。"
       : stage === 4
-        ? `当前需发起验收审批，并上传：${meta.material}`
-        : `当前需上传：${meta.material}`;
+        ? `当前为${initiationUsesExpertAcceptance() ? "10 万元及以上专家验收" : "10 万元以下自行验收"}，需发起验收审批并完成验收后分流判断。`
+        : stage === 5 && state.initiationNeedsSpecialAcceptance && !state.initiationSpecialAcceptanceSubmitted
+          ? "当前需先上传特殊验收证明文件和特殊验收材料包。"
+          : `当前需上传：${meta.material}`;
   }
   const initiationSections = $$("#initiationFormPanel > .wizard-pane.is-active");
   initiationSections.forEach((section, index) => {
@@ -2539,7 +2665,7 @@ function renderInitiationFlow() {
   });
   const table = $("#initiationProcessMaterialTable");
   if (table) {
-    const files = meta.material.split("、");
+    const files = initiationMaterialFiles(stage);
     table.innerHTML = `
       <div><span>节点</span><span>材料名称</span><span>要求</span><span>状态</span><span>操作</span></div>
       ${files.map((file, index) => {
@@ -2556,6 +2682,22 @@ function renderInitiationFlow() {
   if (inheritedExtra) inheritedExtra.innerHTML = processInheritedCards(stage);
   if (extra) {
     extra.innerHTML = initiationProcessExtraMarkup(stage);
+    [
+      ["#initiationDepositSelect", (value) => { state.initiationHasDeposit = value === "yes"; }],
+      ["#initiationDepositDecision", (value) => { state.initiationHasDeposit = value === "yes"; }],
+      ["#initiationDepositRefundDecision", (value) => {
+        state.initiationHasDeposit = value === "yes";
+        renderInitiationFlow();
+      }],
+      ["#initiationSpecialAcceptanceSelect", (value) => {
+        state.initiationNeedsSpecialAcceptance = value === "yes";
+      }]
+    ].forEach(([selector, handler]) => {
+      const field = extra.querySelector(selector);
+      if (!field || field.dataset.directBound === "true") return;
+      field.dataset.directBound = "true";
+      field.addEventListener("change", () => handler(field.value));
+    });
     extra.querySelector("[data-action='addPaymentRecord']")?.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
@@ -2583,12 +2725,42 @@ function advanceInitiationFlow() {
     showToast("已确认归档，返回首页。");
     return;
   }
-  state.initiationStage = stage + 1;
-  renderInitiationFlow();
   if (stage === 4) {
-    showToast("验收审批已提交，审批通过后进入退履约保金环节。");
+    state.initiationAcceptanceSubmitted = true;
+    if (!state.initiationNeedsSpecialAcceptance && !state.initiationHasDeposit) {
+      state.initiationSkippedRefund = true;
+      state.initiationStage = 6;
+      renderInitiationFlow();
+      showToast("验收审批已提交，无特殊验收且无履约保证金，已自动进入归档。");
+      return;
+    }
+    state.initiationStage = 5;
+    renderInitiationFlow();
+    showToast(state.initiationNeedsSpecialAcceptance ? "验收审批已提交，请先完成特殊验收材料。" : "验收审批已提交，进入退履约保金确认。");
     return;
   }
+  if (stage === 5 && state.initiationNeedsSpecialAcceptance && !state.initiationSpecialAcceptanceSubmitted) {
+    state.initiationSpecialAcceptanceSubmitted = true;
+    if (!state.initiationHasDeposit) {
+      state.initiationSkippedRefund = true;
+      state.initiationStage = 6;
+      renderInitiationFlow();
+      showToast("特殊验收材料已提交，无履约保证金，已自动跳过退保进入归档。");
+      return;
+    }
+    renderInitiationFlow();
+    showToast("特殊验收材料已提交，请继续确认退履约保证金。");
+    return;
+  }
+  if (stage === 5 && !state.initiationHasDeposit) {
+    state.initiationSkippedRefund = true;
+    state.initiationStage = 6;
+    renderInitiationFlow();
+    showToast("无履约保证金，已自动跳过退保进入归档。");
+    return;
+  }
+  state.initiationStage = stage + 1;
+  renderInitiationFlow();
   showToast(`已进入${initiationStageMeta[state.initiationStage].label}环节。`);
 }
 
@@ -3125,6 +3297,11 @@ function resetMyProjectFilters() {
 
 function openInitiationDialog() {
   state.initiationStage = 0;
+  state.initiationHasDeposit = true;
+  state.initiationNeedsSpecialAcceptance = false;
+  state.initiationSpecialAcceptanceSubmitted = false;
+  state.initiationAcceptanceSubmitted = false;
+  state.initiationSkippedRefund = false;
   switchScreen("initiationFormPage");
   renderInitiationFlow();
   toggleInitiationLibraryMode();
@@ -3152,6 +3329,12 @@ function openApplicationForm(mode = "edit", options = {}) {
   state.wizardStep = 0;
   state.applicationStage = 0;
   state.applicationDecision = "agree";
+  state.applicationBudgetAmount = null;
+  state.applicationBranch = {
+    standardConclusion: "待确认",
+    expertConclusion: "待确认",
+    schoolConclusion: "待确认"
+  };
   state.applicationApprovals = isReadonly ? [
     {
       node: "所在部门审核",

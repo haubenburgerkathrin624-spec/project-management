@@ -8535,6 +8535,91 @@ body[data-screen="portal"] .quick-panel {
   line-height: 1.7;
 }
 
+.application-branch-review {
+  display: block;
+}
+
+.application-branch-file {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #e6edf7;
+}
+
+.application-branch-file span {
+  min-width: 0;
+  color: #1c2d4b;
+  font-weight: 700;
+}
+
+.application-branch-file em {
+  color: #ad7b16;
+  font-size: 12px;
+  font-style: normal;
+}
+
+.application-branch-file button,
+.application-branch-conclusion select {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid #b9d6ff;
+  border-radius: 5px;
+  background: #eff7ff;
+  color: #156bd8;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.application-branch-conclusion {
+  display: grid;
+  grid-template-columns: 86px minmax(160px, 240px);
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  color: #53627c;
+  font-size: 12px;
+}
+
+.application-branch-conclusion select {
+  width: 100%;
+  background: #fff;
+  color: #243653;
+}
+
+.process-decision-panel {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #dbe7f8;
+  border-radius: 8px;
+  background: #f8fbff;
+}
+
+.process-decision-panel h4 {
+  margin: 0 0 10px;
+  color: #12315e;
+  font-size: 13px;
+}
+
+.process-decision-panel p {
+  margin: 10px 0 0;
+  color: #63718a;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.application-flow-step.is-skipped b {
+  border-color: #cbd5e3;
+  background: #eef2f7;
+  color: #8491a5;
+}
+
+.application-flow-step.is-skipped span {
+  color: #8491a5;
+}
+
 .process-extra-card {
   border: 1px solid #d7e5fb;
   border-radius: 8px;
