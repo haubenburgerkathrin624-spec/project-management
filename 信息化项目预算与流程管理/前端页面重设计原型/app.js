@@ -111,6 +111,7 @@ const state = {
   selectedStatus: "all",
   selectedTemplate: "all",
   selectedPrepStage: "all",
+  pendingReminderMarkRow: null,
   selectedBudgetId: 1,
   selectedCandidateIds: new Set([1, 3]),
   myPendingOnly: false,
@@ -124,6 +125,7 @@ const state = {
   applicationStage: 0,
   applicationDecision: "agree",
   applicationBudgetAmount: null,
+  applicationTerminated: false,
   applicationBranch: {
     standardConclusion: "待确认",
     expertConclusion: "待确认",
@@ -133,10 +135,16 @@ const state = {
   applicationReturnScreen: "applyWizard",
   initiationStage: 0,
   initiationUseLibrary: "yes",
+  initiationSelectedLibraryProjectIds: ["RK2026002"],
+  initiationLibrarySearch: "",
   initiationHasDeposit: true,
-  initiationNeedsSpecialAcceptance: false,
-  initiationSpecialAcceptanceSubmitted: false,
+  initiationHasQualityDeposit: true,
+  initiationIsCityProject: false,
+  initiationNeedsExpertReview: null,
+  initiationAcceptanceStep: 0,
+  initiationCityAcceptanceSubmitted: false,
   initiationAcceptanceSubmitted: false,
+  initiationSkippedCityAcceptance: false,
   initiationSkippedRefund: false,
   manageTab: "business",
   selectedProgressNode: "approval",
@@ -144,70 +152,148 @@ const state = {
   selectedCalendarEvent: "review",
   fundPoolMode: "detail",
   fundPoolDraft: null,
+  pendingUploadRow: null,
+  pendingUploadTitle: "",
+  pendingUploadFiles: [],
+  pendingArchiveMaterialTable: null,
   sortState: {}
 };
 
 const processStageKeys = ["approval", "purchase", "implement", "trial", "acceptance", "refund", "archive"];
 
-const applicationStandardStageMeta = [
-  { label: "申请人申报", actor: "张老师", button: "确认提交", placeholder: "提交后流转到所在部门审核。" },
-  { label: "所在部门审核", actor: "王主任", button: "确认审核", placeholder: "请填写所在部门审核意见。" },
-  { label: "信息中心审核", actor: "信息中心李老师", button: "确认审核", placeholder: "请填写信息中心审核意见。" },
-  { label: "确认入库", actor: "信息办管理员", button: "确认入库", placeholder: "请填写入库确认意见。" }
+const initiationLibraryProjectOptions = [
+  {
+    id: "RK2026002",
+    name: "统一身份认证平台升级",
+    department: "信息化办公室",
+    owner: "李工",
+    type: "软件平台",
+    amount: "420000 元",
+    status: "已入库，可发起立项"
+  },
+  {
+    id: "RK2026001",
+    name: "网络安全态势感知平台",
+    department: "信息化办公室",
+    owner: "张工",
+    type: "网络安全",
+    amount: "860000 元",
+    status: "已入库，可发起立项"
+  },
+  {
+    id: "RK2026005",
+    name: "日志审计平台建设",
+    department: "信息化办公室",
+    owner: "赵工",
+    type: "数据治理",
+    amount: "360000 元",
+    status: "已入库，可发起立项"
+  },
+  {
+    id: "RK2025008",
+    name: "校园网出口链路优化",
+    department: "网络中心",
+    owner: "陈工",
+    type: "基础设施",
+    amount: "1180000 元",
+    status: "已入库，可发起立项"
+  }
 ];
 
-const applicationExpertStageMeta = [
-  { label: "申请人申报", actor: "张老师", button: "确认提交", placeholder: "提交后流转到所在部门审核。" },
-  { label: "所在部门审核", actor: "王主任", button: "确认审核", placeholder: "请填写所在部门审核意见。" },
-  { label: "信息中心审核", actor: "信息中心李老师", button: "进入专家论证", placeholder: "项目预算达到 10 万元及以上，确认后进入专家论证。" },
-  { label: "专家论证", actor: "评审专家", button: "提交专家论证", placeholder: "请完成专家论证并填写结论。" },
-  { label: "学校评审", actor: "学校评审会", button: "提交学校评审", placeholder: "请完成学校评审并填写结论。" },
-  { label: "确认入库", actor: "信息办管理员", button: "确认入库", placeholder: "请填写入库确认意见。" }
+const applicationStandardStageMeta = [
+  { label: "项目申报", actor: "张老师", button: "提交", placeholder: "提交后流转到网信办审核。" },
+  { label: "网信办审核", actor: "网信办李老师", button: "确认审核", placeholder: "请上传网信办评审结论和评审材料。" },
+  { label: "校级审核", actor: "校级评审组", button: "确认审核", placeholder: "请上传校级评审结论和评审材料。" },
+  { label: "进入项目库", actor: "信息办管理员", button: "完成入库", placeholder: "请填写入库确认意见。" }
 ];
 
 const applicationDecisionText = {
   agree: "同意",
   return: "退回修改",
-  reject: "不同意"
+  reject: "不同意",
+  expert: "安排专家论证",
+  school: "参加校级评审"
 };
 
 function applicationBudgetAmount() {
-  const value = $("#applicationFormPanel .application-budget-pane input")?.value || "0";
+  const value = $("#applicationBudgetInput")?.value || $("#applicationFormPanel .application-budget-pane input")?.value || "0";
   return Number(value.replace(/[^\d.]/g, "")) || 0;
 }
 
-function projectBudgetAmount() {
-  if (Number.isFinite(state.applicationBudgetAmount) && state.applicationBudgetAmount > 0) return state.applicationBudgetAmount;
-  const initiationValue = $("#initiationBudgetAmount")?.value || "0";
-  return Number(initiationValue.replace(/[^\d.]/g, "")) || applicationBudgetAmount();
+function applicationUsesSchoolReview() {
+  return Number(state.applicationBudgetAmount ?? applicationBudgetAmount()) > 100000;
 }
 
-function applicationUsesExpertReview() {
-  return applicationBudgetAmount() >= 100000;
+function projectBudgetAmount() {
+  const initiationValue = $("#initiationBudgetAmount")?.value || "0";
+  const initiationAmount = Number(initiationValue.replace(/[^\d.]/g, "")) || 0;
+  return initiationAmount || applicationBudgetAmount();
 }
 
 function initiationUsesExpertAcceptance() {
   return projectBudgetAmount() >= 100000;
 }
 
+function acceptanceNeedsExpertReview() {
+  return state.initiationNeedsExpertReview ?? initiationUsesExpertAcceptance();
+}
+
 function initiationMaterialFiles(stage) {
-  if (stage === 5 && state.initiationNeedsSpecialAcceptance && !state.initiationSpecialAcceptanceSubmitted) {
-    return ["特殊验收证明文件", "特殊验收材料包"];
+  if (stage === 4) {
+    const baseFiles = ["验收申请单", "验收材料", "验收材料清单", "验收报告最终稿"];
+    const reviewFiles = acceptanceNeedsExpertReview() ? ["专家意见材料"] : [];
+    const cityFiles = state.initiationIsCityProject ? ["市级验收清单"] : [];
+    return state.initiationIsCityProject
+      ? [...baseFiles, ...reviewFiles, ...cityFiles]
+      : [...baseFiles, ...reviewFiles];
   }
+  if (stage === 5 && !state.initiationHasDeposit) return [];
   return initiationStageMeta[stage]?.material.split("、") || [];
 }
 
+function initiationMaterialRequirement(stage, index, file) {
+  if (stage === 0 || stage === 2 || stage === 3) return "按需";
+  if (stage === 4) {
+    if (["验收申请单", "验收材料", "验收报告最终稿", "市级验收清单"].includes(file)) return "必填";
+    if (file === "专家意见材料") return "专家必填";
+    return "按需";
+  }
+  if (stage === 5) return index === 0 ? "必填" : "选填";
+  return index === 0 ? "必填" : "按需";
+}
+
+function initiationMaterialStatus(stage, index, file) {
+  if (stage === 0 || stage === 2 || stage === 3) return "待确认，可补充";
+  if (stage === 4 && ["验收报告最终稿", "市级验收清单"].includes(file)) return "待上传最终稿";
+  if (stage === 4 && file === "专家意见材料") return "待主管确认";
+  return index === 0 ? "待上传" : "待确认，可补充";
+}
+
+function materialUploadActions(status = "") {
+  const uploaded = /已上传|已归集|已确认/.test(status);
+  return uploaded
+    ? `<button type="button" data-action="uploadProjectAttachment">上传</button><button type="button" data-action="removeAttachment">删除</button>`
+    : `<button type="button" data-action="uploadProjectAttachment">上传</button>`;
+}
+
 function applicationFlowStages() {
-  return applicationUsesExpertReview() ? applicationExpertStageMeta : applicationStandardStageMeta;
+  return applicationStandardStageMeta.filter((stage) => stage.label !== "校级审核" || applicationUsesSchoolReview());
+}
+
+function renderApplicationBudgetHint() {
+  const hint = $("#applicationBudgetHint");
+  if (!hint) return;
+  hint.classList.add("is-hidden");
+  hint.textContent = "";
 }
 
 const initiationStageMeta = [
-  { label: "立项", button: "提交立项", material: "立项确认单、经费确认记录、预算编号确认单" },
-  { label: "采购", button: "提交采购材料", material: "采购申请流程文件、盖章合同、采购论证材料" },
-  { label: "实施", button: "提交实施材料", material: "启动会材料、实施计划、付款凭证" },
+  { label: "立项", button: "提交立项", material: "项目批复材料" },
+  { label: "采购", button: "提交采购材料", material: "采购申请流程文件、采购论证材料、盖章合同" },
+  { label: "实施", button: "提交实施材料", material: "附件材料" },
   { label: "试运行", button: "提交试运行材料", material: "培训记录、试运行报告、问题整改记录" },
   { label: "验收", button: "提交验收审批", material: "验收申请、验收审批表、专家意见、整改记录" },
-  { label: "退履约保金", button: "提交退保金确认", material: "退保证金凭证、无需退还说明" },
+  { label: "退履约保金", button: "提交退保金确认", material: "退保证金凭证" },
   { label: "归档", button: "确认归档", material: "归档移交清单、全流程材料包" }
 ];
 
@@ -218,13 +304,13 @@ const advancedFilterPresets = {
     { label: "预算来源", options: ["全部", "信息化建设专项", "基础设施更新预算", "网络安全与数据治理"] },
     { label: "预算金额", options: ["全部", "10 万以下", "10-50 万", "50-100 万", "100 万以上"] },
     { label: "归档状态", options: ["全部", "未归档", "待归档", "已归档"] },
-    { label: "材料阶段", options: ["全部", "申报", "立项", "采购", "实施", "试运行", "验收", "退履约保金", "归档"] }
+    { label: "材料阶段", options: ["全部", "申报", "立项", "采购", "实施", "试运行", "验收", "市级验收", "退履约保金", "归档"] }
   ],
   processNode: [
     { label: "项目编号", placeholder: "输入项目编号" },
     { label: "项目类型", options: ["全部", "应用系统", "基础设施", "网络安全", "数据治理"] },
     { label: "任务优先级", options: ["全部", "P0", "P1", "普通"] },
-    { label: "截止时间", options: ["全部", "今日到期", "7 天内", "已逾期"] },
+    { label: "截止时间", type: "date", value: "2026-07-08" },
     { label: "预算区间", options: ["全部", "10 万以下", "10 万以上", "100 万以上"] },
     { label: "归口部门", placeholder: "输入归口部门" }
   ],
@@ -262,7 +348,7 @@ const advancedFilterPresets = {
   ],
   docs: [
     { label: "资料编号", placeholder: "输入资料编号" },
-    { label: "所属节点", options: ["全部", "申报", "项目库", "立项", "采购", "实施", "试运行", "验收", "退履约保金", "归档"] },
+    { label: "所属节点", options: ["全部", "申报", "项目库", "立项", "采购", "实施", "试运行", "验收", "市级验收", "退履约保金", "归档"] },
     { label: "是否必填", options: ["全部", "必填", "后续必填", "选填"] },
     { label: "版本号", placeholder: "输入版本号" },
     { label: "更新日期", options: ["全部", "近 7 天", "近 30 天", "本年度"] },
@@ -289,7 +375,7 @@ const advancedFilterPresets = {
     { label: "申报部门", placeholder: "输入申报部门" },
     { label: "提醒来源", options: ["全部", "系统生成", "人工标记", "截止提醒"] },
     { label: "风险级别", options: ["全部", "高", "中", "低"] },
-    { label: "截止区间", options: ["全部", "今日", "3 天内", "7 天内", "已逾期"] },
+    { label: "截止时间", type: "date", value: "2026-07-08" },
     { label: "跟进方式", options: ["全部", "站内提醒", "电话沟通", "材料补正", "线下确认"] }
   ]
 };
@@ -306,7 +392,7 @@ const applicantTodos = [
 const applicantTodoBuckets = {
   pending: applicantTodos,
   done: [
-    { title: "统一身份认证平台升级", desc: "所在部门审核已处理", due: "2024-05-20", type: "已办", icon: "icon-user.png" },
+    { title: "统一身份认证平台升级", desc: "网信办审核已处理", due: "2024-05-20", type: "已办", icon: "icon-user.png" },
     { title: "日志审计平台建设", desc: "预算测算表已确认", due: "2024-05-21", type: "已办", icon: "icon-apply.png" },
     { title: "校园网出口链路优化", desc: "归档材料已标记", due: "2024-05-22", type: "已办", icon: "icon-progress.png" }
   ],
@@ -385,7 +471,7 @@ const progressStages = [
     state: "",
     status: "待提交报告",
     date: "-",
-    data: [["试运行周期", "30 天"], ["试运行范围", "信息办、网络中心"], ["问题记录", "待填写"], ["整改负责人", "待填写"], ["运行结论", "待确认"], ["下一步", "提交验收申请"]],
+    data: [["试运行周期", "30 天"], ["试运行范围", "信息办、网络中心"], ["问题记录", "待填写"], ["整改负责人", "待填写"], ["运行结论", "待确认"], ["下一步", "提交验收审批"]],
     files: [["试运行报告.docx", "待提交", "-"], ["问题整改记录.xlsx", "待提交", "-"], ["用户确认单.pdf", "待提交", "-"]]
   },
   {
@@ -394,8 +480,17 @@ const progressStages = [
     state: "",
     status: "未开始",
     date: "-",
-    data: [["验收流程", "申请-材料-初审-分级评审-结论"], ["验收单位", "信息办"], ["验收时间", "待安排"], ["验收", "未形成"], ["评审规则", "10 万以上专项评审"], ["下一步", "验收通过后退履约保金"]],
+    data: [["验收流程", "申请-材料-初审-分级评审-结论"], ["验收单位", "网信办"], ["验收时间", "待安排"], ["验收", "未形成"], ["评审规则", "按立项金额判断"], ["下一步", "按市级项目和保证金条件分流"]],
     files: [["验收申请报告.docx", "待提交", "-"], ["验收材料清单.xlsx", "待提交", "-"], ["专家评审意见.pdf", "待提交", "-"], ["正式验收报告.pdf", "待提交", "-"]]
+  },
+  {
+    key: "cityAcceptance",
+    title: "市级验收",
+    state: "",
+    status: "按立项条件触发",
+    date: "-",
+    data: [["触发规则", "立项确认为市级（上海市）项目"], ["办理部门", "网信办"], ["验收证明", "待上传"], ["材料包", "待归集"], ["跳过规则", "非市级项目自动跳过"], ["下一步", "按保证金条件进入退保或归档"]],
+    files: [["市级验收通过证明.pdf", "按需上传", "-"], ["市级验收材料包.zip", "按需上传", "-"], ["市级验收补充说明.docx", "按需上传", "-"]]
   },
   {
     key: "refund",
@@ -403,8 +498,8 @@ const progressStages = [
     state: "",
     status: "待验收通过",
     date: "-",
-    data: [["触发规则", "验收通过后自动触发"], ["合同金额", "待确认"], ["需退保金", "待计算"], ["数据局项目", "无需退还"], ["退还状态", "未开始"], ["下一步", "归档"]],
-    files: [["退履约保金确认记录.pdf", "待提交", "-"], ["无需退还说明.pdf", "按需上传", "-"], ["财务处理回执.pdf", "待提交", "-"]]
+    data: [["触发规则", "有履约保证金时触发"], ["合同金额", "待确认"], ["保证金金额", "待计算"], ["合同编号", "待核对"], ["退还状态", "未开始"], ["下一步", "归档"]],
+    files: [["退保证金凭证.pdf", "待提交", "-"], ["合同保证金核对表.xlsx", "待提交", "-"], ["财务处理回执.pdf", "待提交", "-"]]
   },
   {
     key: "archive",
@@ -450,7 +545,7 @@ const completedProcessStages = [
     title: "试运行",
     status: "试运行通过",
     date: "2024-09-22",
-    data: [["试运行周期", "30 天"], ["试运行范围", "网络中心、信息办"], ["问题记录", "2 项，均已关闭"], ["整改负责人", "供应商项目组"], ["运行结论", "稳定"], ["下一步", "提交验收申请"]],
+    data: [["试运行周期", "30 天"], ["试运行范围", "网络中心、信息办"], ["问题记录", "2 项，均已关闭"], ["整改负责人", "供应商项目组"], ["运行结论", "稳定"], ["下一步", "提交验收审批"]],
     files: [["试运行报告.docx", "已归档", "2024-09-22"], ["问题整改记录.xlsx", "已归档", "2024-09-18"], ["用户确认单.pdf", "已归档", "2024-09-22"]],
     result: "试运行指标达成，具备验收条件。"
   },
@@ -459,9 +554,18 @@ const completedProcessStages = [
     title: "验收",
     status: "验收通过",
     date: "2024-10-18",
-    data: [["验收流程", "申请-材料-初审-分级评审-结论"], ["验收单位", "信息办"], ["验收时间", "2024-10-18"], ["验收", "通过"], ["整改项", "无"], ["下一步", "退履约保金"]],
+    data: [["验收流程", "申请-材料-初审-分级评审-结论"], ["验收单位", "网信办"], ["验收时间", "2024-10-18"], ["验收", "通过"], ["整改项", "无"], ["下一步", "市级验收"]],
     files: [["验收申请报告.docx", "已归档", "2024-10-12"], ["验收材料清单.xlsx", "已归档", "2024-10-15"], ["专家评审意见.pdf", "已归档", "2024-10-18"], ["正式验收报告.pdf", "已归档", "2024-10-18"]],
     result: "验收通过，系统自动触发退履约保金判断。"
+  },
+  {
+    key: "cityAcceptance",
+    title: "市级验收",
+    status: "已通过",
+    date: "2024-10-22",
+    data: [["触发规则", "市级（上海市）项目"], ["办理部门", "网信办"], ["市级验收", "通过"], ["通过日期", "2024-10-22"], ["材料包", "已归集"], ["下一步", "退履约保金"]],
+    files: [["市级验收通过证明.pdf", "已归档", "2024-10-22"], ["市级验收材料包.zip", "已生成", "2024-10-22"]],
+    result: "市级验收证明和材料包已归集，继续进入履约保证金处理。"
   },
   {
     key: "refund",
@@ -524,9 +628,12 @@ const templates = [
   { name: "初审意见表", type: "验收", stage: "acceptance", version: "V1.0", desc: "项目主管初审材料完整性。" },
   { name: "专家评审意见模板", type: "验收", stage: "acceptance", version: "V1.2", desc: "10 万元以上项目专项评审使用。" },
   { name: "正式验收报告", type: "验收", stage: "acceptance", version: "V2.2", desc: "验收结论、签字页和整改闭环。" },
+  { name: "市级验收通过证明", type: "市级验收", stage: "cityAcceptance", version: "V1.0", desc: "上海市项目在校内验收后上传通过证明。" },
+  { name: "市级验收材料包目录", type: "市级验收", stage: "cityAcceptance", version: "V1.0", desc: "市级验收提交、反馈和证明材料统一打包。" },
+  { name: "市级验收补充说明", type: "市级验收", stage: "cityAcceptance", version: "V1.0", desc: "非标准材料或补充过程说明。" },
   { name: "退履约保金申请表", type: "退履约保金", stage: "refund", version: "V1.0", desc: "验收通过后自动触发，确认退还信息。" },
   { name: "合同保证金核对表", type: "退履约保金", stage: "refund", version: "V1.0", desc: "合同金额、保证金比例、退还金额核对。" },
-  { name: "无需退还说明", type: "退履约保金", stage: "refund", version: "V1.0", desc: "数据局相关项目或无保证金项目留痕。" },
+  { name: "退保证金凭证", type: "退履约保金", stage: "refund", version: "V1.0", desc: "财务退还凭证和银行回单归档。" },
   { name: "归档移交清单", type: "归档", stage: "archive", version: "V1.5", desc: "按阶段汇总附件，缺项自动标红。" },
   { name: "全过程材料包目录", type: "归档", stage: "archive", version: "V1.0", desc: "申报至归档全流程文件目录。" },
   { name: "审计移交确认单", type: "归档", stage: "archive", version: "V1.0", desc: "对接审计和档案移交。" },
@@ -539,7 +646,7 @@ const materialStageData = {
     myNote: "当前申报项目的基础材料状态。",
     templateNote: "申报：申报书、必要性说明、团队角色、基础信息。",
     references: [
-      ["icon-template.png", "信息化项目申报指南", "申报条件、流程节点、材料口径", "下载"],
+      ["icon-template.png", "信息化项目申报指南", "申报条件、流程节点、材料要求", "下载"],
       ["icon-apply.png", "建设必要性填写样例", "背景、痛点、建设目标和预期成效", "下载"],
       ["icon-user.png", "团队角色填写说明", "负责人、归口负责人、实施联系人", "下载"]
     ],
@@ -644,7 +751,7 @@ const materialStageData = {
     myNote: "验收阶段材料状态。",
     templateNote: "验收：申请报告、初审意见、专家意见、正式报告。",
     references: [
-      ["icon-shield.png", "验收申请报告", "提交验收申请、建设总结和验收依据", "下载"],
+      ["icon-shield.png", "验收申请报告", "提交验收审批、建设总结和验收依据", "下载"],
       ["icon-template.png", "验收材料清单", "初审、分级评审、专家意见、正式报告", "下载"],
       ["icon-material.png", "专家评审意见模板", "10 万元以上项目专项评审使用", "下载"]
     ],
@@ -654,19 +761,34 @@ const materialStageData = {
       ["icon-user.png", "统一身份认证平台升级", "验收材料待初审", "查看"]
     ]
   },
+  cityAcceptance: {
+    note: "市级验收仅对立项确认的市级（上海市）项目开放。",
+    myNote: "市级验收材料状态。",
+    templateNote: "市级验收：通过证明、材料包、补充说明。",
+    references: [
+      ["icon-shield.png", "市级验收通过证明", "通过证明、意见回执和确认日期", "下载"],
+      ["icon-material.png", "市级验收材料包目录", "申报、验收、反馈材料压缩归集", "下载"],
+      ["icon-template.png", "市级验收补充说明", "补充过程说明和非标准附件", "下载"]
+    ],
+    mine: [
+      ["icon-shield.png", "网络安全态势感知平台", "按市级项目条件待触发", "查看"],
+      ["icon-database.png", "校园出口链路优化", "市级验收证明已归档", "查看"],
+      ["icon-user.png", "统一身份认证平台升级", "非市级项目已跳过", "查看"]
+    ]
+  },
   refund: {
     note: "退履约保金阶段核对合同和退还状态。",
     myNote: "退履约保金材料状态。",
-    templateNote: "退履约保金：申请表、保证金核对、无需退还说明。",
+    templateNote: "退履约保金：申请表、合同保证金核对、退保证金凭证。",
     references: [
       ["icon-database.png", "退履约保金申请表", "验收通过后确认退还信息", "下载"],
       ["icon-material.png", "合同保证金核对表", "合同金额、比例、退还金额", "下载"],
-      ["icon-template.png", "无需退还说明", "数据局或无保证金项目留痕", "下载"]
+      ["icon-template.png", "退保证金凭证", "财务退还凭证和银行回单", "下载"]
     ],
     mine: [
       ["icon-database.png", "校园出口链路优化", "退还记录已归档", "查看"],
       ["icon-shield.png", "数据备份与容灾扩容", "保证金待核对", "处理"],
-      ["icon-user.png", "日志审计平台建设", "无需退还说明已上传", "查看"]
+      ["icon-user.png", "日志审计平台建设", "退保证金凭证已上传", "查看"]
     ]
   },
   archive: {
@@ -705,19 +827,19 @@ const processNodeData = {
     rows: [
       ["SB2026001", "网络安全态势感知平台", "信息办", "张工", "2026", "申报", "补齐预算测算表后提交", "86 万", "缺 1"],
       ["SB2026002", "统一身份认证平台升级", "信息办", "李工", "2026", "申报", "申报材料已提交", "42 万", "齐全"],
-      ["SB2026003", "数据备份与容灾扩容", "信息办", "王工", "2026", "退回修改", "按退回意见重填预算口径", "58 万", "缺 2"],
+      ["SB2026003", "数据备份与容灾扩容", "信息办", "王工", "2026", "退回修改", "按退回意见重填预算说明", "58 万", "缺 2"],
       ["SB2026004", "一站式网上办事大厅扩展", "图文信息中心", "周老师", "2026", "申报", "等待归口部门确认", "65 万", "待确认"]
     ]
   },
   processReview: {
     title: "项目申报库列表",
     hero: ["项目申报库", "申报项目入库管理", "所有申报项目统一确认入库状态，已入库后才能发起立项"],
-    summary: ["全部 22", "未入库 13", "已入库 9"],
+    summary: ["全部 22", "未入库 13", "已入库 4", "已出库 5"],
     rows: [
       ["RK2026001", "网络安全态势感知平台", "信息办", "张工", "2026", "未入库", "待确认入库", "86 万", "缺 1"],
-      ["RK2026002", "统一身份认证平台升级", "信息办", "李工", "2026", "已入库", "可发起立项", "42 万", "齐全"],
+      ["RK2026002", "统一身份认证平台升级", "信息办", "李工", "2026", "已出库", "已关联立项，进入立项页面", "42 万", "齐全"],
       ["RK2026003", "校园网出口链路优化", "网络中心", "陈工", "2026", "未入库", "待确认入库", "120 万", "齐全"],
-      ["RK2026004", "数据备份与容灾扩容", "信息办", "王工", "2026", "未入库", "材料需补充", "58 万", "缺 2"]
+      ["RK2026004", "数据备份与容灾扩容", "信息办", "王工", "2026", "已入库", "待发起立项", "58 万", "齐全"]
     ]
   },
   processApproval: {
@@ -775,9 +897,20 @@ const processNodeData = {
       ["YS2025008", "数据备份与容灾扩容", "信息办", "王工", "2025", "待申请", "补齐试运行报告", "58 万", "缺 1"]
     ]
   },
+  processCityAcceptance: {
+    title: "市级验收列表",
+    hero: ["市级验收", "上海市项目条件触发", "立项确认为市级（上海市）项目时，校内验收通过后进入本环节"],
+    summary: ["全部 4", "待提交 1", "待市级确认 1", "已通过 2", "已跳过 6"],
+    rows: [
+      ["SJ2026001", "网络安全态势感知平台", "信息办", "张工", "2026", "待提交", "上传市级验收证明和材料包", "86 万", "缺 1"],
+      ["SJ2024018", "校园出口链路优化一期", "网络中心", "陈工", "2024", "已通过", "市级验收证明已归档", "118 万", "齐全"],
+      ["SJ2025008", "数据备份与容灾扩容", "信息办", "王工", "2025", "待市级确认", "等待市级验收反馈", "58 万", "待确认"],
+      ["SJ2026002", "统一身份认证平台升级", "信息办", "李工", "2026", "已跳过", "非市级项目，验收后按保证金分流", "42 万", "齐全"]
+    ]
+  },
   processRefund: {
     title: "退履约保金列表",
-    hero: ["退履约保金", "按合同保证金判断", "合同无履约保证金时自动跳过，特殊验收材料在本节点留痕"],
+    hero: ["退履约保金", "按合同保证金判断", "合同无履约保证金时自动跳过，市级验收材料按条件独立归集"],
     summary: ["全部 7", "待判断 2", "待退履约保金 2", "已退履约保金 2", "无需退还 1"],
     rows: [
       ["TJ2025008", "数据备份与容灾扩容", "信息办", "王工", "2025", "待退履约保金", "确认合同结余并上传记录", "58 万", "齐全"],
@@ -802,6 +935,15 @@ const processNodeData = {
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 
+function escapeHTML(value = "") {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function showToast(message) {
   const toast = $("#toast");
   toast.textContent = message;
@@ -813,15 +955,16 @@ function showToast(message) {
 function progressNodeDetailMarkup(key = state.selectedProgressNode) {
   const stages = progressStages.filter((item) => processStageKeys.includes(item.key));
   const node = stages.find((item) => item.key === key) || stages[0];
+  const eventSummary = node.data.map((item) => `${item[0]}：${item[1]}`).join("；");
+  const nodeStateText = node.state === "done" ? "已完成" : node.state === "active" ? "进行中" : "待开始";
   return `
     <section class="progress-node-detail-card">
       <div class="progress-node-detail-head">
         <h3>${node.title}里程碑</h3>
         <span>${node.status} · ${node.date}</span>
       </div>
-      <div class="progress-event-list progress-event-list-compact">
-        <div><time>${node.date}</time><strong>${node.title}节点更新</strong><span>${node.status}</span><em>${node.state === "done" ? "已完成" : node.state === "active" ? "进行中" : "待开始"}</em></div>
-        <div><time>${node.date === "-" ? "待定" : node.date}</time><strong>里程碑事件</strong><span>${node.data.map((item) => `${item[0]}：${item[1]}`).join("；")}</span><em>${node.title}</em></div>
+      <div class="progress-event-list progress-event-list-compact progress-event-list-merged">
+        <div><time>${node.date === "-" ? "待定" : node.date}</time><strong>${node.title}节点更新</strong><span>${node.status}；${eventSummary}</span><em>${nodeStateText}</em></div>
       </div>
     </section>
   `;
@@ -922,7 +1065,7 @@ function bindCompletedProcessNodeButtons() {
 function prepareFundPoolDetail(button) {
   const mode = button.dataset.fundMode || (button.textContent.includes("编辑") ? "edit" : button.textContent.includes("新增") ? "new" : "detail");
   const row = button.closest(".admin-table-row");
-  const cells = row ? Array.from(row.children).map((item) => item.textContent.trim()) : [];
+  const cells = row ? rowCellTexts(row) : [];
   state.fundPoolMode = mode;
   if (mode !== "new" && !row && state.fundPoolDraft) return;
   state.fundPoolDraft = mode === "new" ? {
@@ -930,7 +1073,9 @@ function prepareFundPoolDetail(button) {
     code: "",
     source: "信息化建设专项",
     amount: "",
-    used: "0 万",
+    linkedCount: "0",
+    linkedAmount: "0 万",
+    paid: "0 万",
     balance: "",
     date: "2026-07-10",
     status: "可用"
@@ -939,11 +1084,62 @@ function prepareFundPoolDetail(button) {
     code: cells[2] || "XXH-2026-01",
     source: cells[3] || "信息化建设专项",
     amount: cells[4] || "260 万",
-    used: cells[5] || "104 万",
-    balance: cells[6] || "156 万",
-    date: cells[7] || "2026-01-10",
-    status: (cells[8] || "可用").replace(/\s+/g, "")
+    linkedCount: cells[5] || "3",
+    linkedAmount: cells[6] || "126 万",
+    paid: cells[7] || "104 万",
+    balance: cells[8] || "156 万",
+    date: "2026-01-10",
+    status: (cells[9] || "可用").replace(/\s+/g, "")
   };
+}
+
+function fundLinkedProjects(code = state.fundPoolDraft?.code || "XXH-2026-01") {
+  const groups = {
+    "XXH-2026-01": [
+      ["网络安全态势感知平台", "张工", "信息办", "86 万", "立项", "processApproval"],
+      ["统一身份认证平台升级", "李工", "信息办", "42 万", "实施", "processImplement"],
+      ["日志审计平台建设", "赵工", "信息办", "36 万", "采购", "processPurchase"]
+    ],
+    "JCSS-2026-04": [
+      ["校园网出口链路优化", "陈工", "网络中心", "120 万", "立项", "processApproval"],
+      ["数据中心存储扩容", "王工", "信息办", "58 万", "采购", "processPurchase"]
+    ],
+    "AQZL-2026-02": [
+      ["统一身份认证平台升级", "李工", "信息办", "42 万", "实施", "processImplement"],
+      ["数据备份与容灾扩容", "王工", "信息办", "58 万", "材料补正", "processReview"]
+    ]
+  };
+  return groups[code] || [["网络安全态势感知平台", "张工", "信息办", "86 万", "立项", "processApproval"]];
+}
+
+function openFundLinkedProjects(button) {
+  prepareFundPoolDetail(button);
+  const draft = state.fundPoolDraft || {};
+  const projects = fundLinkedProjects(draft.code);
+  openCustomDetail({
+    eyebrow: "关联项目",
+    title: `${draft.name || "年度经费"}关联项目`,
+    meta: `${draft.code || "待生成编号"} · 共 ${projects.length} 个项目`,
+    type: "fundLinkedProjects",
+    body: `
+      <div class="fund-linked-table fund-linked-project-table">
+        <div><span>项目名称</span><span>申报部门</span><span>负责人</span><span>关联金额</span><span>当前菜单</span><span>操作</span></div>
+        ${projects.map(([name, owner, dept, amount, stage, target]) => `
+          <div><strong>${name}</strong><span>${dept}</span><span>${owner}</span><span>${amount}</span><em>${stage}</em><button type="button" data-action="openLinkedProjectMenu" data-target-tab="${target}">查看</button></div>
+        `).join("")}
+      </div>
+    `
+  });
+  $("#detailDrawer")?.querySelectorAll("[data-action='openLinkedProjectMenu']").forEach((jumpButton) => {
+    jumpButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      closeDetail();
+      switchScreen("manage");
+      setManageTab(jumpButton.dataset.targetTab || "processApproval");
+      showToast("已跳转到项目对应菜单。");
+    });
+  });
 }
 
 function fundPoolDetailText() {
@@ -980,8 +1176,9 @@ function fundPoolDetailBody() {
         <label><span>预算性质</span><select ${disabled}><option>专项经费</option><option>基础设施</option><option>安全治理</option><option>年度统筹</option><option>结余经费</option></select></label>
         <label><span>经费状态</span><select ${disabled}><option>${statusValue}</option><option>待启用</option><option>可用</option><option>冻结</option><option>已占用</option><option>已归档</option></select></label>
         <label><span>预算总额</span><input ${disabled} value="${amountValue}" placeholder="请输入金额，如 260 万" /></label>
-        <label><span>已占用金额</span><input ${disabled} value="${value("used", mode === "new" ? "0 万" : "104 万")}" placeholder="系统可按匹配记录自动汇总" /></label>
-        <label><span>可用余额</span><input ${disabled} value="${balanceValue}" placeholder="保存时按总额 - 已占用计算" /></label>
+        <label><span>已关联金额</span><input ${disabled} value="${value("linkedAmount", mode === "new" ? "0 万" : "126 万")}" placeholder="系统可按匹配记录自动汇总" /></label>
+        <label><span>已付款金额</span><input ${disabled} value="${value("paid", mode === "new" ? "0 万" : "104 万")}" placeholder="按付款记录自动汇总" /></label>
+        <label><span>可用余额</span><input ${disabled} value="${balanceValue}" placeholder="保存时按总额、关联和付款记录计算" /></label>
         <label><span>记录时间</span><input ${disabled} value="${value("date", "2026-07-10")}" /></label>
         <label><span>管理部门</span><input ${disabled} value="信息办" /></label>
         <label><span>优先级</span><select ${disabled}><option>P0 优先保障</option><option>P1 常规推进</option><option>P2 储备观察</option></select></label>
@@ -1003,7 +1200,7 @@ function fundPoolDetailBody() {
         <div><span>项目名称</span><span>负责人</span><span>申请金额</span><span>当前状态</span><span>匹配结果</span></div>
         <div><strong>网络安全态势感知平台</strong><span>张工</span><span>86 万</span><span>申报库评审</span><em>可关联</em></div>
         <div><strong>数据备份与容灾扩容</strong><span>王工</span><span>58 万</span><span>待补材料</span><em>待确认</em></div>
-        <div><strong>日志审计平台建设</strong><span>赵工</span><span>36 万</span><span>采购论证</span><em>已占用</em></div>
+        <div><strong>日志审计平台建设</strong><span>赵工</span><span>36 万</span><span>采购论证</span><em>已付款</em></div>
       </div>
     </section>
 
@@ -1109,13 +1306,13 @@ function projectAttachmentArchiveMarkup() {
 }
 
 function normalizeArchiveStage(stageText = "") {
-  const stages = ["申报", "项目库", "立项", "采购", "实施", "试运行", "验收", "退履约保金", "归档"];
+  const stages = ["申报", "项目库", "立项", "采购", "实施", "试运行", "验收", "市级验收", "退履约保金", "归档"];
   return stages.find((stage) => stageText.includes(stage)) || "申报";
 }
 
 function adminProjectContextFromRow(button) {
   const row = button?.closest?.(".admin-table-row");
-  const cells = row ? [...row.children].map((cell) => cell.textContent.trim()) : [];
+  const cells = row ? rowCellTexts(row) : [];
   if (cells[0]?.startsWith("XXH")) {
     return {
       code: cells[0],
@@ -1155,6 +1352,7 @@ function adminProjectMaterialsMarkup(context) {
     { stage: "实施", files: ["实施计划.docx", "实施会议纪要.pdf", "软测安测材料.zip"] },
     { stage: "试运行", files: ["启动会记录.pdf", "培训签到表.xlsx", "试运行报告.docx"] },
     { stage: "验收", files: ["验收申请报告.docx", "验收审批表.pdf", "专家评审意见.pdf", "正式验收报告.pdf"] },
+    { stage: "市级验收", files: ["市级验收通过证明.pdf", "市级验收材料包.zip"] },
     { stage: "退履约保金", files: ["退履约保金申请表.pdf", "合同保证金核对表.xlsx"] },
     { stage: "归档", files: ["归档移交清单.xlsx", "全过程材料包.zip"] }
   ];
@@ -1209,7 +1407,7 @@ function openAdminProjectMaterials(button) {
 
 function roleContextFromButton(button) {
   const row = button?.closest?.(".role-table > div");
-  const cells = row ? [...row.children].map((cell) => cell.textContent.trim()) : [];
+  const cells = row ? rowCellTexts(row) : [];
   return {
     name: cells[0] || "新建角色",
     scope: cells[1] || "本部门项目",
@@ -1457,7 +1655,7 @@ function detailContent(type) {
         <h3>流程记录与审批意见</h3>
         <div class="approval-flow">
           <article class="done"><b>06-20</b><strong>申报提交</strong><span>张工提交项目基础信息和建设说明。</span></article>
-          <article class="done"><b>06-24</b><strong>归口确认</strong><span>李老师确认建设必要性，建议补充预算测算口径。</span></article>
+          <article class="done"><b>06-24</b><strong>归口确认</strong><span>李老师确认建设必要性，建议补充预算测算说明。</span></article>
           <article class="active"><b>06-28</b><strong>信息办初审</strong><span>预算测算表待补齐，补齐后进入入库确认。</span></article>
           <article><b>待定</b><strong>立项确认</strong><span>入库后进入立项，经费和项目编号在立项环节确认。</span></article>
         </div>
@@ -1510,7 +1708,7 @@ function detailContent(type) {
     projectProgress: {
       eyebrow: "项目进度",
       title: "网络安全态势感知平台",
-      meta: "环节进度与里程碑事件",
+      meta: "环节进度与节点事件",
       body: `
         <section class="detail-section progress-brief-section">
           <h3>项目过程环节</h3>
@@ -1519,16 +1717,6 @@ function detailContent(type) {
           </div>
         </section>
         <div id="progressNodeDetail">${progressNodeDetailMarkup()}</div>
-        <section class="detail-section progress-brief-section">
-          <h3>里程碑事件</h3>
-          <div class="progress-milestone-list">
-            <article class="active"><b>2026-07</b><strong>立项与经费确认</strong><span>确认项目编号、经费编号和立项材料。</span></article>
-            <article><b>2026-08</b><strong>采购资料归集</strong><span>上传采购论证、采购结果和合同文件。</span></article>
-            <article><b>2026-09</b><strong>实施推进</strong><span>维护实施计划、会议纪要和阶段报告。</span></article>
-            <article><b>2026-10</b><strong>试运行</strong><span>完成实施联调后提交试运行报告和问题整改记录</span></article>
-            <article><b>2026-12</b><strong>验收、退保金与归档</strong><span>完成验收、退履约保金确认和归档移交清单。</span></article>
-          </div>
-        </section>
       `
     },
     progressSummary: {
@@ -1686,7 +1874,7 @@ function detailContent(type) {
         <div class="detail-table team-col">
           <div><span>角色</span><span>姓名</span><span>部门</span><span>职责</span></div>
           <div><strong>项目负责人</strong><span>张工</span><span>信息办</span><span>申报填报、材料补齐、节点跟进</span></div>
-          <div><strong>归口负责人</strong><span>李老师</span><span>信息办</span><span>建设必要性确认、预算口径审核</span></div>
+          <div><strong>归口负责人</strong><span>李老师</span><span>信息办</span><span>建设必要性确认、预算标准审核</span></div>
           <div><strong>实施联系人</strong><span>王工</span><span>网络中心</span><span>系统接入、联调测试、试运行报告</span></div>
         </div>
       `
@@ -1793,7 +1981,7 @@ function detailContent(type) {
       body: `
         <div class="detail-list">
           <div><span>申报</span><strong>信息化项目申报书 V3.2</strong><em>可带入申报单</em></div>
-          <div><span>预算</span><strong>预算测算明细表 V2.1</strong><em>统一年度预算口径</em></div>
+          <div><span>预算</span><strong>预算测算明细表 V2.1</strong><em>统一年度预算标准</em></div>
           <div><span>归档</span><strong>归档移交清单 V1.5</strong><em>缺项自动标记</em></div>
         </div>
       `
@@ -1825,17 +2013,17 @@ function detailContent(type) {
           <button class="primary-btn" type="button" data-close-detail>保存设置</button>
         </div>
         <div class="field-config-table">
-          <div><span>顺序</span><span>字段</span><span>显示</span><span>冻结/排序</span></div>
-          <div><b>☰ 01</b><strong>项目编号</strong><label><input type="checkbox" checked /> 显示</label><em>固定左侧</em></div>
-          <div><b>☰ 02</b><strong>项目名称</strong><label><input type="checkbox" checked /> 显示</label><em>固定左侧</em></div>
-          <div><b>☰ 03</b><strong>预算来源</strong><label><input type="checkbox" checked /> 显示</label><em>可筛选</em></div>
-          <div><b>☰ 04</b><strong>申报部门</strong><label><input type="checkbox" checked /> 显示</label><em>可筛选</em></div>
-          <div><b>☰ 05</b><strong>申报人</strong><label><input type="checkbox" checked /> 显示</label><em>-</em></div>
-          <div><b>☰ 06</b><strong>申报时间</strong><label><input type="checkbox" checked /> 显示</label><em>可排序</em></div>
-          <div><b>☰ 07</b><strong>当前节点</strong><label><input type="checkbox" checked /> 显示</label><em>可筛选</em></div>
-          <div><b>☰ 08</b><strong>预算金额</strong><label><input type="checkbox" checked /> 显示</label><em>可排序</em></div>
-          <div><b>☰ 09</b><strong>材料缺项数</strong><label><input type="checkbox" checked /> 显示</label><em>可排序</em></div>
-          <div><b>☰ 10</b><strong>操作</strong><label><input type="checkbox" checked disabled /> 必显</label><em>固定右侧</em></div>
+          <div><span>顺序</span><span>字段名称</span><span>显示</span><span>冻结/排序</span></div>
+          <div><b>☰ 01</b><input class="field-name-input" value="项目编号" /><label><input type="checkbox" checked /> 显示</label><em>固定左侧</em></div>
+          <div><b>☰ 02</b><input class="field-name-input" value="项目名称" /><label><input type="checkbox" checked /> 显示</label><em>固定左侧</em></div>
+          <div><b>☰ 03</b><input class="field-name-input" value="预算来源" /><label><input type="checkbox" checked /> 显示</label><em>可筛选</em></div>
+          <div><b>☰ 04</b><input class="field-name-input" value="申报部门" /><label><input type="checkbox" checked /> 显示</label><em>可筛选</em></div>
+          <div><b>☰ 05</b><input class="field-name-input" value="申报人" /><label><input type="checkbox" checked /> 显示</label><em>-</em></div>
+          <div><b>☰ 06</b><input class="field-name-input" value="申报时间" /><label><input type="checkbox" checked /> 显示</label><em>可排序</em></div>
+          <div><b>☰ 07</b><input class="field-name-input" value="当前节点" /><label><input type="checkbox" checked /> 显示</label><em>可筛选</em></div>
+          <div><b>☰ 08</b><input class="field-name-input" value="预算金额" /><label><input type="checkbox" checked /> 显示</label><em>可排序</em></div>
+          <div><b>☰ 09</b><input class="field-name-input" value="材料缺项数" /><label><input type="checkbox" checked /> 显示</label><em>可排序</em></div>
+          <div><b>☰ 10</b><input class="field-name-input" value="操作" /><label><input type="checkbox" checked disabled /> 必显</label><em>固定右侧</em></div>
         </div>
       `
     },
@@ -1846,7 +2034,7 @@ function detailContent(type) {
       body: `
         <div class="detail-list">
           <div><span>07-01</span><strong>2026 年信息化项目申报已开放</strong><em>全年可申报</em></div>
-          <div><span>06-28</span><strong>申报材料模板与预算口径已更新</strong><em>请使用新版模板</em></div>
+          <div><span>06-28</span><strong>申报材料模板与预算标准已更新</strong><em>请使用新版模板</em></div>
           <div><span>06-24</span><strong>采购论证、验收和归档材料清单发布</strong><em>资料准备池可下载</em></div>
         </div>
       `
@@ -1868,7 +2056,7 @@ function detailContent(type) {
         </div>
         <section class="detail-section">
           <h3>处理建议</h3>
-          <p>联系项目负责人补齐预算测算表，并在材料上传后重新触发立项。若预算口径不明确，可先下载最新预算测算模板。</p>
+          <p>联系项目负责人补齐预算测算表，并在材料上传后重新触发立项。若预算标准不明确，可先下载最新预算测算模板。</p>
         </section>
         <div class="inline-action-row">
           <button class="primary-btn" type="button" data-action="quickProcess">去处理</button>
@@ -1883,7 +2071,7 @@ function detailContent(type) {
       body: `
         <section class="detail-section">
           <h3>通知内容</h3>
-          <p>2026 年信息化项目申报已开放，全年可申报。提交前请先在资料准备池查看申报指南、预算测算口径、采购论证清单、验收和归档要求。</p>
+          <p>2026 年信息化项目申报已开放，全年可申报。提交前请先在资料准备池查看申报指南、预算测算标准、采购论证清单、验收和归档要求。</p>
         </section>
         <div class="detail-list">
           <div><span>适用对象</span><strong>各部门信息化项目申请人、归口负责人</strong><em>全校</em></div>
@@ -2067,11 +2255,11 @@ function detailContent(type) {
     },
     uploadMaterial: {
       eyebrow: "资料维护",
-      title: "上传资料",
+      title: "新增资料模板",
       meta: "发布到用户端资料模板或管理端资料清单",
       body: `
         <div class="detail-form upload-material-form">
-          <label><span>所属阶段</span><select><option>申报前</option><option>项目库</option><option>立项</option><option>预算口径</option><option>采购阶段</option><option>实施</option><option>试运行</option><option>验收</option><option>退履约保金</option><option>归档</option></select></label>
+          <label><span>所属阶段</span><select><option>申报前</option><option>项目库</option><option>立项</option><option>预算标准</option><option>采购阶段</option><option>实施</option><option>试运行</option><option>验收</option><option>市级验收</option><option>退履约保金</option><option>归档</option></select></label>
           <label><span>附件名称</span><input value="预算测算明细表" /></label>
           <label><span>是否必填</span><select><option>必填</option><option>选填</option><option>管理员可见</option></select></label>
           <label><span>资料类型</span><select><option>下载模板</option><option>参考资料</option><option>填报样例</option><option>附件清单</option></select></label>
@@ -2134,21 +2322,6 @@ function closeDetail() {
   $("#detailDrawer").setAttribute("aria-hidden", "true");
 }
 
-function updateUseDepartmentTrigger(field) {
-  const trigger = field?.querySelector(".multi-select-trigger");
-  if (!trigger) return;
-  const checked = [...field.querySelectorAll("input:checked")].map((input) => input.value);
-  trigger.textContent = checked.length ? checked.join("、") : "请选择使用部门";
-}
-
-function closeUseDepartmentSelect(exceptField) {
-  $$("[data-multi-select='useDepartment']").forEach((field) => {
-    if (field === exceptField) return;
-    field.classList.remove("is-open");
-    field.querySelector(".multi-select-trigger")?.setAttribute("aria-expanded", "false");
-  });
-}
-
 function setMode(mode, preferredScreen) {
   state.mode = mode;
   document.body.dataset.mode = mode;
@@ -2183,7 +2356,11 @@ function switchScreen(screen, syncMode = true) {
     item.classList.toggle("is-active", active);
   });
   $("#pageTitle").textContent = screens[screen].title;
-  $("#pageHeading").textContent = screens[screen].heading;
+  const pageHeading = $("#pageHeading");
+  if (pageHeading) {
+    pageHeading.textContent = screens[screen].heading;
+    pageHeading.classList.toggle("is-hidden", screen === "initiationFormPage");
+  }
   const adminBreadcrumbCurrent = $("#adminBreadcrumbCurrent");
   if (adminBreadcrumbCurrent) adminBreadcrumbCurrent.textContent = screens[screen].title;
   if (screen === "applyWizard" || screen === "applicationFormPage") setWizardStep(state.wizardStep);
@@ -2258,90 +2435,106 @@ function setApplicationReadOnly(readOnly) {
 function renderApplicationAttachmentTable(readOnly = false) {
   const table = $("#applicationAttachmentTable");
   if (!table) return;
+  table.classList.toggle("is-readonly-attachments", readOnly);
   if (readOnly) {
     table.innerHTML = `
-      <div><span>附件名称</span><span>当前状态</span><span>操作</span></div>
-      <div><strong>项目申报书.pdf</strong><em>已上传</em><span class="attach-actions"><button type="button" data-action="previewMaterial">查看</button></span></div>
-      <div><strong>预算测算表.xlsx</strong><em>已上传</em><span class="attach-actions"><button type="button" data-action="previewMaterial">查看</button></span></div>
-      <div><strong>现状问题说明.docx</strong><em>已上传</em><span class="attach-actions"><button type="button" data-action="previewMaterial">查看</button></span></div>
+      <div><span>附件名称</span><span>已传附件</span><span>当前状态</span><span>操作</span></div>
+      <div><strong>项目申报书</strong><span class="uploaded-attachment-list"><a href="javascript:void(0)" data-action="previewMaterial">信息化项目申报书.pdf</a></span><em>已上传 1 个</em><span class="attach-actions"><button type="button" data-action="previewMaterial">查看</button><button type="button" data-action="downloadTemplate">下载</button></span></div>
+      <div><strong>预算测算表</strong><span class="uploaded-attachment-list"><a href="javascript:void(0)" data-action="previewMaterial">预算测算明细表.xlsx</a></span><em>已上传 1 个</em><span class="attach-actions"><button type="button" data-action="previewMaterial">查看</button><button type="button" data-action="downloadTemplate">下载</button></span></div>
+      <div><strong>现状问题说明</strong><span class="uploaded-attachment-list"><a href="javascript:void(0)" data-action="previewMaterial">现状问题说明.docx</a></span><em>已上传 1 个</em><span class="attach-actions"><button type="button" data-action="previewMaterial">查看</button><button type="button" data-action="downloadTemplate">下载</button></span></div>
     `;
+    syncTableSequenceNumbers(table.parentElement || document);
     return;
   }
   table.innerHTML = `
-    <div><span>附件名称</span><span>材料清单</span><span>是否必填</span><span>当前状态</span><span>操作</span></div>
-    <div><strong>项目申报书</strong><span>项目基本情况、建设目标、预算测算</span><span>必填</span><em>已上传</em><span class="attach-actions"><button type="button" data-action="uploadProjectAttachment">重新上传</button><button type="button" data-action="previewMaterial">查看</button><button type="button" data-action="removeAttachment">删除</button></span></div>
-    <div><strong>预算测算表</strong><span>测算依据、费用构成、经费来源说明</span><span>按需</span><em>已上传</em><span class="attach-actions"><button type="button" data-action="uploadProjectAttachment">重新上传</button><button type="button" data-action="previewMaterial">查看</button><button type="button" data-action="removeAttachment">删除</button></span></div>
-    <div><strong>现状问题说明</strong><span>业务现状、问题说明、参考材料</span><span>选填</span><em>已上传</em><span class="attach-actions"><button type="button" data-action="uploadProjectAttachment">重新上传</button><button type="button" data-action="previewMaterial">查看</button><button type="button" data-action="removeAttachment">删除</button></span></div>
-    <div><strong>其他附件</strong><span>补充说明、截图、佐证材料</span><span>选填</span><em>可多选</em><span class="attach-actions"><button type="button" data-action="uploadProjectAttachment">＋ 添加附件</button></span></div>
+    <div><span>附件名称</span><span>已传附件</span><span>是否必填</span><span>当前状态</span><span>操作</span></div>
+    <div><strong>项目申报书</strong><span class="uploaded-attachment-list"><a href="javascript:void(0)" data-action="previewMaterial">信息化项目申报书.pdf</a></span><span>必填</span><em>已上传 1 个</em><span class="attach-actions"><button type="button" data-action="uploadProjectAttachment">重新上传</button><button type="button" data-action="previewMaterial">查看</button><button type="button" data-action="downloadTemplate">下载</button><button type="button" data-action="removeAttachment">删除</button></span></div>
+    <div><strong>预算测算表</strong><span class="uploaded-attachment-list"><a href="javascript:void(0)" data-action="previewMaterial">预算测算明细表.xlsx</a></span><span>按需</span><em>已上传 1 个</em><span class="attach-actions"><button type="button" data-action="uploadProjectAttachment">重新上传</button><button type="button" data-action="previewMaterial">查看</button><button type="button" data-action="downloadTemplate">下载</button><button type="button" data-action="removeAttachment">删除</button></span></div>
+    <div><strong>现状问题说明</strong><span class="uploaded-attachment-list"><a href="javascript:void(0)" data-action="previewMaterial">现状问题说明.docx</a></span><span>选填</span><em>已上传 1 个</em><span class="attach-actions"><button type="button" data-action="uploadProjectAttachment">重新上传</button><button type="button" data-action="previewMaterial">查看</button><button type="button" data-action="downloadTemplate">下载</button><button type="button" data-action="removeAttachment">删除</button></span></div>
   `;
+  syncTableSequenceNumbers(table.parentElement || document);
 }
 
-function applicationBranchReviewMarkup(stage, readOnly = false) {
-  const expert = applicationUsesExpertReview();
-  const conclusion = expert
-    ? stage === 3 ? state.applicationBranch.expertConclusion : state.applicationBranch.schoolConclusion
-    : state.applicationBranch.standardConclusion;
-  if ((!expert && stage !== 3) || (expert && ![3, 4].includes(stage))) return "";
-  const title = expert
-    ? stage === 3 ? "10 万元及以上：专家论证" : "10 万元及以上：学校评审"
-    : "10 万元以下：论证/评审入库";
-  const description = readOnly
-    ? expert ? stage === 3 ? "查看专家论证材料与论证结论。" : "查看学校评审材料与评审结论。" : "查看论证/评审材料与入库结论。"
-    : expert
-    ? stage === 3 ? "请上传专家论证材料并确认论证结论，完成后进入学校评审。" : "请上传学校评审材料并确认评审结论，完成后进入入库确认。"
-    : "请上传论证/评审材料并确认结论，通过后进入项目库。";
-  const field = expert ? stage === 3 ? "expertConclusion" : "schoolConclusion" : "standardConclusion";
-  const materialStatus = readOnly ? "已上传" : "待上传";
-  return `
-    <section class="library-branch-review application-branch-review ${readOnly ? "is-readonly" : ""}">
-      <article>
-        <h4>${title}</h4>
-        <p>${description}</p>
-        <div class="application-branch-file">
-          <span>${expert ? stage === 3 ? "专家论证材料" : "学校评审材料" : "论证/评审材料"}</span>
-          <em>${materialStatus}</em>
-          ${readOnly ? "" : `<button type="button" data-action="uploadProjectAttachment">上传材料</button>`}
-          <button type="button" data-action="previewMaterial">查看</button>
-        </div>
-        <label class="application-branch-conclusion">
-          <span>本节点结论</span>
-          <select data-application-branch-field="${field}" ${readOnly ? "disabled" : ""}>
-            <option value="待确认" ${conclusion === "待确认" ? "selected" : ""}>待确认</option>
-            <option value="通过" ${conclusion === "通过" ? "selected" : ""}>通过</option>
-            <option value="退回修改" ${conclusion === "退回修改" ? "selected" : ""}>退回修改</option>
-            <option value="不通过" ${conclusion === "不通过" ? "selected" : ""}>不通过</option>
-          </select>
-        </label>
-      </article>
-    </section>
-  `;
-}
-
-function bindApplicationBranchFields(readOnly = false) {
-  $$("[data-application-branch-field]").forEach((field) => {
-    if (field.dataset.directBound === "true") return;
-    field.dataset.directBound = "true";
-    field.disabled = readOnly;
-    field.addEventListener("change", () => {
-      state.applicationBranch[field.dataset.applicationBranchField] = field.value;
-    });
-  });
-}
-
-function applicationBranchConclusionPassed(stage) {
-  if (applicationUsesExpertReview()) {
-    return stage === 3
-      ? state.applicationBranch.expertConclusion === "通过"
-      : stage === 4
-        ? state.applicationBranch.schoolConclusion === "通过"
-        : true;
+function initiationAcceptanceNextLabel() {
+  if (state.initiationIsCityProject) {
+    return state.initiationHasDeposit
+      ? "提交验收审批后，在本环节继续补齐市级验收材料，再进入退履约保证金。"
+      : "提交验收审批后，在本环节继续补齐市级验收材料，再直接进入归档。";
   }
-  return stage === 3 ? state.applicationBranch.standardConclusion === "通过" : true;
+  return state.initiationHasDeposit
+    ? "提交后进入退履约保证金。"
+    : "提交后跳过退履约保证金，直接进入归档。";
+}
+
+function initiationCityAcceptanceNextLabel() {
+  return state.initiationHasDeposit
+    ? "市级验收材料在验收环节补齐后进入退履约保证金。"
+    : "市级验收材料在验收环节补齐后直接进入归档。";
+}
+
+function acceptanceStepMax() {
+  return state.initiationIsCityProject ? 4 : 3;
+}
+
+function advanceAcceptanceStep() {
+  state.initiationAcceptanceStep = Math.min(acceptanceStepMax(), (state.initiationAcceptanceStep || 0) + 1);
+  renderInitiationFlow();
+  showToast(`已进入${["申请", "验收过程", "验收材料", "验收报告", "市级项目验收报告"][state.initiationAcceptanceStep]}。`);
+}
+
+function initiationSubmitLabel(stage, meta) {
+  if (stage === 4) return "提交";
+  return stage === 6 ? "提交" : meta.button.replace(/^提交.+$/, "提交");
 }
 
 function openApplicationReadonlyDetail(returnScreen = state.screen || "manage") {
+  if (returnScreen === "manage") {
+    openApplicationReadonlyDialog();
+    showToast("申报只读信息已打开。");
+    return;
+  }
   openApplicationForm("readonly", { returnScreen });
   showToast("已打开只读详情页。");
+}
+
+function openApplicationReadonlyDialog() {
+  openCustomDetail({
+    eyebrow: "申报详情",
+    title: "网络安全态势感知平台",
+    meta: "只读表单信息",
+    type: "applicationReadonlyDialog",
+    body: `
+      <section class="detail-section readonly-form-section">
+        <h3>基础信息</h3>
+        <div class="form-grid form-grid-3 readonly-form-grid">
+          <label><span>项目名称</span><input value="网络安全态势感知平台" readonly /></label>
+          <label><span>申报部门</span><input value="信息化办公室" readonly /></label>
+          <label><span>归口部门</span><input value="信息化办公室" readonly /></label>
+          <label><span>建设类型</span><input value="软件平台" readonly /></label>
+          <label><span>使用部门</span><input value="全校" readonly /></label>
+          <label><span>申报人</span><input value="张老师" readonly /></label>
+        </div>
+      </section>
+      <section class="detail-section readonly-form-section">
+        <h3>预算</h3>
+        <div class="form-grid form-grid-3 readonly-form-grid">
+          <label><span>申报预算</span><input value="860000 元" readonly /></label>
+          <label><span>经费来源</span><input value="信息化建设专项" readonly /></label>
+          <label><span>费用说明</span><input value="" readonly /></label>
+        </div>
+      </section>
+      <section class="detail-section readonly-form-section">
+        <h3>申报材料</h3>
+        <div class="attachment-check-table application-upload-table is-readonly-attachments">
+          <div><span>附件名称</span><span>已传附件</span><span>当前状态</span><span>操作</span></div>
+          <div><strong>项目申报书</strong><span>信息化项目申报书.pdf</span><em>已上传 1 个</em><span class="attach-actions"><button type="button" data-action="previewMaterial">查看</button></span></div>
+          <div><strong>预算测算表</strong><span>预算测算明细表.xlsx</span><em>已上传 1 个</em><span class="attach-actions"><button type="button" data-action="previewMaterial">查看</button></span></div>
+          <div><strong>现状问题说明</strong><span>现状问题说明.docx</span><em>已上传 1 个</em><span class="attach-actions"><button type="button" data-action="previewMaterial">查看</button></span></div>
+        </div>
+      </section>
+    `
+  });
+  syncTableSequenceNumbers($("#detailBody") || document);
 }
 
 function renderApplicationApprovalTimeline() {
@@ -2350,7 +2543,7 @@ function renderApplicationApprovalTimeline() {
   const rows = [];
   if (state.applicationStage > 0 || state.applicationApprovals.length) {
     rows.push({
-      node: "申请人申报",
+      node: "项目申报",
       actor: "张老师",
       time: "2026-07-14 09:20",
       result: "已提交",
@@ -2379,14 +2572,16 @@ function renderApplicationFlowTrack(stages, stage) {
 }
 
 function renderApplicationFlow() {
+  renderApplicationBudgetHint();
   const stages = applicationFlowStages();
   const stage = Math.max(0, Math.min(stages.length - 1, state.applicationStage || 0));
   state.applicationStage = stage;
   const meta = stages[stage];
+  const isFinalStorage = stage === stages.length - 1;
   const panel = $("#applicationFormPanel");
   const isReadonlyMode = panel?.dataset.applicationMode === "readonly";
   renderApplicationFlowTrack(stages, stage);
-  $("#applicationFlowCurrent") && ($("#applicationFlowCurrent").textContent = `当前：${meta.label}`);
+  $("#applicationFlowCurrent") && ($("#applicationFlowCurrent").textContent = meta.label);
   $$("[data-application-stage]").forEach((item) => {
     const itemStage = Number(item.dataset.applicationStage);
     item.classList.toggle("is-current", itemStage === stage);
@@ -2396,33 +2591,110 @@ function renderApplicationFlow() {
   panel?.classList.toggle("is-readonly-detail", isReadonlyMode);
   setApplicationReadOnly(isReview || isReadonlyMode);
   renderApplicationAttachmentTable(isReview || isReadonlyMode);
-  $("#applicationHistoryPane")?.classList.toggle("is-hidden", !isReadonlyMode && !isReview && !state.applicationApprovals.length);
-  $("#applicationApprovalPane")?.classList.toggle("is-hidden", isReadonlyMode || !isReview);
-  $("#applicationSaveDraft")?.classList.toggle("is-hidden", isReadonlyMode || isReview);
+  const historyPane = $("#applicationHistoryPane");
+  const approvalPane = $("#applicationApprovalPane");
+  historyPane?.classList.toggle("is-hidden", !isReadonlyMode && !isReview && !state.applicationApprovals.length);
+  approvalPane?.classList.toggle("is-hidden", isReadonlyMode || !isReview || isFinalStorage);
+  const approvalHeadTitle = approvalPane?.querySelector(".panel-head h2");
+  const approvalCollapseButton = approvalPane?.querySelector(".application-section-collapse");
+  if (approvalHeadTitle) approvalHeadTitle.textContent = meta.label;
+  if (approvalCollapseButton) approvalCollapseButton.setAttribute("aria-label", `收起${meta.label}`);
+  if (isReview && !isReadonlyMode && historyPane && approvalPane && historyPane.previousElementSibling !== approvalPane) {
+    historyPane.parentNode.insertBefore(approvalPane, historyPane);
+  }
+  const saveButton = $("#applicationSaveDraft");
+  if (saveButton) {
+    saveButton.classList.toggle("is-hidden", isReadonlyMode);
+    saveButton.textContent = "保存";
+  }
   const opinion = $("#applicationApprovalOpinion");
   if (opinion && isReview) opinion.placeholder = meta.placeholder;
   const approvalPanel = $("#applicationApprovalPane .approval-panel");
+  const existingOpinionLabel = approvalPanel?.querySelector(".application-approval-opinion-label");
+  if (approvalPanel && existingOpinionLabel && existingOpinionLabel.closest(".library-branch-review")) {
+    approvalPanel.appendChild(existingOpinionLabel);
+  }
+  approvalPanel?.querySelector(".application-route-note")?.remove();
   approvalPanel?.querySelector(".library-branch-review")?.remove();
-  if (approvalPanel && isReview) {
-    approvalPanel.insertAdjacentHTML("afterbegin", applicationBranchReviewMarkup(stage, isReadonlyMode));
-    bindApplicationBranchFields(isReadonlyMode);
+  if (approvalPanel && isReview && !isFinalStorage) {
+    const isOfficeReview = meta.label === "网信办审核";
+    const isSchoolReview = meta.label === "校级审核";
+    if (isOfficeReview || isSchoolReview) {
+      const branchDecisionOptions = isSchoolReview ? `
+                  <label class="approval-option is-positive"><input type="radio" name="${meta.label}结论" value="agree" checked /><span>同意入库</span></label>
+                  <label class="approval-option is-warning"><input type="radio" name="${meta.label}结论" value="return" /><span>退回修改</span></label>
+                  <label class="approval-option is-danger"><input type="radio" name="${meta.label}结论" value="reject" /><span>不同意入库</span></label>
+                ` : `
+                  <label class="approval-option is-positive"><input type="radio" name="${meta.label}结论" value="agree" checked /><span>同意入库</span></label>
+                  <label class="approval-option is-warning"><input type="radio" name="${meta.label}结论" value="return" /><span>退回修改</span></label>
+                  <label class="approval-option is-danger"><input type="radio" name="${meta.label}结论" value="reject" /><span>不同意入库</span></label>
+                  <label class="approval-option is-info"><input type="radio" name="${meta.label}结论" value="expert" /><span>安排专家论证</span></label>
+                  <label class="approval-option is-purple"><input type="radio" name="${meta.label}结论" value="school" /><span>参加校级评审</span></label>
+                `;
+      const branchMarkup = `
+        <div class="library-branch-review application-branch-review">
+          <article>
+            <div class="application-review-subsections">
+              <div class="application-review-subsection application-branch-attachments">
+                <div class="application-branch-attachment-head">
+                  <strong>评审材料上传</strong>
+	                  <button class="ghost-btn" type="button" data-action="addBranchAttachment">新增附件</button>
+                </div>
+                <div class="attachment-check-table application-upload-table application-branch-attachment-table">
+                  <div><span>附件名称</span><span>要求</span><span>状态</span><span>操作</span></div>
+                  <div><strong contenteditable="true" title="可直接修改附件名称">${meta.label}评审材料</strong><span><i class="required-star" aria-hidden="true">*</i>必填</span><em>待上传</em><span class="attach-actions"><button type="button" data-action="uploadProjectAttachment">上传</button></span></div>
+                </div>
+              </div>
+              <div class="application-review-subsection application-review-conclusion">
+                <div class="application-branch-conclusion application-branch-radio-group">
+                  <span>审核结论</span>
+                  ${branchDecisionOptions}
+                </div>
+                ${isSchoolReview ? `
+                  <div class="application-city-decision application-branch-radio-group">
+                    <span>市级项目申报</span>
+                    <label class="approval-option is-info"><input type="radio" name="${meta.label}市级申报" value="no" checked /><span>不参加市级项目申报</span></label>
+                    <label class="approval-option is-purple"><input type="radio" name="${meta.label}市级申报" value="yes" /><span>参加市级项目申报</span></label>
+                  </div>
+                ` : ""}
+                <div class="application-branch-opinion-slot"></div>
+              </div>
+            </div>
+          </article>
+        </div>
+      `;
+      const opinionLabel = approvalPanel.querySelector("label");
+      if (opinionLabel) opinionLabel.insertAdjacentHTML("beforebegin", branchMarkup);
+      else approvalPanel.insertAdjacentHTML("beforeend", branchMarkup);
+      const inserted = approvalPanel.querySelector(".library-branch-review");
+      const slot = inserted?.querySelector(".application-branch-opinion-slot");
+      if (slot && opinionLabel) slot.appendChild(opinionLabel);
+      inserted?.querySelectorAll(".application-branch-conclusion .approval-option input").forEach((input) => {
+        input.addEventListener("change", () => {
+          if (input.checked) state.applicationDecision = input.value;
+        });
+      });
+    }
   }
   const submit = $("#applicationFlowSubmit");
+  const saveDraftButton = $("#applicationSaveDraft");
   const returnButton = $("#applicationReturnBtn");
   const rejectButton = $("#applicationRejectBtn");
-  const isFinalStorage = stage === stages.length - 1;
+  if (saveDraftButton) {
+    saveDraftButton.classList.toggle("is-hidden", isReview || isReadonlyMode || isFinalStorage);
+  }
   if (submit) {
-    submit.classList.toggle("is-hidden", isReadonlyMode);
-    submit.textContent = meta.button;
+    submit.classList.toggle("is-hidden", isReadonlyMode || isFinalStorage);
+    submit.textContent = "提交";
     submit.dataset.decisionSubmit = isFinalStorage ? "approve" : "agree";
   }
   if (returnButton) {
-    returnButton.classList.toggle("is-hidden", isReadonlyMode || stage === 0);
-    returnButton.textContent = isFinalStorage ? "暂不入库" : "退回修改";
-    returnButton.dataset.decisionSubmit = isFinalStorage ? "hold" : "return";
+    returnButton.classList.toggle("is-hidden", !isReview || isReadonlyMode || isFinalStorage);
+    returnButton.textContent = "保存";
+    returnButton.dataset.decisionSubmit = "save";
   }
   if (rejectButton) {
-    rejectButton.classList.toggle("is-hidden", isReadonlyMode || stage === 0 || isFinalStorage);
+    rejectButton.classList.toggle("is-hidden", true);
     rejectButton.dataset.decisionSubmit = "reject";
   }
   const applicationSections = $$("#applicationFormPanel > .wizard-pane.is-active");
@@ -2430,7 +2702,11 @@ function renderApplicationFlow() {
     const shouldCollapse = isReview && index < 2;
     setApplicationSectionCollapsed(section, shouldCollapse);
   });
+  bindProjectAttachmentUploadButtons(panel || document);
+  ensureAttachmentHeaderAddButtons(panel || document);
+  syncTableSequenceNumbers(panel || document);
   renderApplicationApprovalTimeline();
+  styleRequiredAsterisks(panel || document);
 }
 
 function selectApplicationDecision(button) {
@@ -2458,210 +2734,470 @@ function submitApplicationFlow() {
   const stage = state.applicationStage;
   const stages = applicationFlowStages();
   const finalStage = stages.length - 1;
+  if (stage >= finalStage) {
+    renderApplicationFlow();
+    showToast("项目已完成入库，可查看入库结果。");
+    return;
+  }
   if (stage === 0) {
     state.applicationBudgetAmount = applicationBudgetAmount();
     state.applicationStage = 1;
     state.applicationDecision = "agree";
+    state.applicationTerminated = false;
     renderApplicationFlow();
-    showToast("申报已提交，进入所在部门审核。");
+    showToast("申报已提交，进入网信办审核。");
     return;
   }
-  if (stage < finalStage) {
-    const decision = state.applicationDecision || "agree";
-    if (decision === "agree" && !applicationBranchConclusionPassed(stage)) {
-      renderApplicationFlow();
-      showToast("请先完成本节点结论，选择“通过”后再进入下一环节。");
-      return;
-    }
-    appendApplicationApproval(applicationDecisionText[decision]);
-    if (decision === "return") {
-      state.applicationStage = 0;
-      renderApplicationFlow();
-      showToast("已退回修改，申请人可重新编辑后提交。");
-      return;
-    }
-    if (decision === "reject") {
-      renderApplicationFlow();
-      showToast("已记录不同意意见，流程停留在当前审核节点。");
-      return;
-    }
-    state.applicationStage = stage + 1;
-    state.applicationDecision = "agree";
+  const decision = state.applicationDecision || "agree";
+  appendApplicationApproval(applicationDecisionText[decision]);
+  if (decision === "return") {
+    state.applicationStage = 0;
     renderApplicationFlow();
-    showToast(`已进入${stages[state.applicationStage].label}。`);
+    showToast("已退回修改，申请人可重新编辑后提交。");
     return;
   }
-  const storageDecision = state.applicationDecision === "hold" ? "hold" : "approve";
-  appendApplicationApproval(storageDecision === "approve" ? "确认入库" : "暂不入库");
-  renderApplicationFlow();
-  if (storageDecision === "approve") {
-    state.applicationDecision = "agree";
-    switchScreen("portal");
-    showToast("已确认入库，可进入项目立项。");
+  if (decision === "reject") {
+    if (stages[stage]?.label === "校级审核") {
+      state.applicationTerminated = true;
+      renderApplicationFlow();
+      showToast("已记录不同意入库，项目申报流程已终止。");
+      return;
+    }
+    renderApplicationFlow();
+    showToast("已记录不同意意见，流程停留在当前审核节点。");
     return;
   }
+  if (decision === "expert") {
+    renderApplicationFlow();
+    showToast("已暂存为安排专家论证，线下论证后可继续上传材料并选择后续操作。");
+    return;
+  }
+  state.applicationStage = stage + 1;
   state.applicationDecision = "agree";
-  showToast("已记录暂不入库意见。");
+  renderApplicationFlow();
+  showToast(state.applicationStage >= finalStage ? "审核已通过，项目完成入库。" : `已进入${stages[state.applicationStage].label}。`);
 }
 
 function submitApplicationFlowFromButton(button) {
-  state.applicationDecision = button?.dataset?.decisionSubmit || "agree";
+  if (button?.dataset?.decisionSubmit === "save") {
+    showToast("已保存审核草稿。");
+    return;
+  }
+  const checkedDecision = $("#applicationApprovalPane .application-branch-conclusion .approval-option input:checked")?.value
+    || $("#applicationApprovalPane .approval-option input:checked")?.value;
+  state.applicationDecision = state.applicationStage > 0
+    ? (checkedDecision || button?.dataset?.decisionSubmit || "agree")
+    : (button?.dataset?.decisionSubmit || "agree");
   submitApplicationFlow();
 }
 
-function processInheritedCards(stage) {
-  const cards = [
-    "",
-    `<details class="process-extra-card process-history-section"><summary><span>采购与合同信息</span><b>展开查看</b></summary><div class="process-history-fields"><div><span>采购方式</span><strong>校内论证后采购</strong></div><div><span>采购金额</span><strong>82 万</strong></div><div><span>合同名称</span><strong>网络安全态势感知平台建设合同</strong></div><div><span>合同日期</span><strong>2026-08-20</strong></div><div><span>供应商</span><strong>上海某信息技术有限公司</strong></div><div><span>履约保证金</span><strong>4.1 万</strong></div></div><div class="process-history-files"><span>采购申请流程文件.pdf</span><button type="button" data-action="previewMaterial">预览</button><span>盖章合同.pdf</span><button type="button" data-action="previewMaterial">预览</button></div></details>`,
-    `<details class="process-extra-card process-history-section"><summary><span>实施与付款记录</span><b>展开查看</b></summary><div class="process-history-fields"><div><span>启动日期</span><strong>2026-09-01</strong></div><div><span>实施负责人</span><strong>王工</strong></div><div><span>已付款合计</span><strong>24.6 万</strong></div><div><span>阶段结论</span><strong>系统建设和联调完成</strong></div></div><div class="process-history-files"><span>启动会纪要.pdf</span><button type="button" data-action="previewMaterial">预览</button><span>付款审批单.pdf</span><button type="button" data-action="previewMaterial">预览</button></div></details>`,
-    `<details class="process-extra-card process-history-section"><summary><span>试运行信息</span><b>展开查看</b></summary><div class="process-history-fields"><div><span>开始时间</span><strong>2026-11-01</strong></div><div><span>结束时间</span><strong>2026-11-30</strong></div><div><span>试运行结论</span><strong>稳定，可申请验收</strong></div><div><span>问题整改</span><strong>已关闭</strong></div></div><div class="process-history-files"><span>培训记录.xlsx</span><button type="button" data-action="previewMaterial">预览</button><span>试运行报告.docx</span><button type="button" data-action="previewMaterial">预览</button></div></details>`,
-    `<details class="process-extra-card process-history-section"><summary><span>验收信息</span><b>展开查看</b></summary><div class="process-history-fields"><div><span>验收方式</span><strong>专家验收</strong></div><div><span>验收结论</span><strong>通过</strong></div><div><span>质保期开始</span><strong>2026-12-20</strong></div><div><span>整改记录</span><strong>已完成</strong></div></div><div class="process-history-files"><span>验收审批表.pdf</span><button type="button" data-action="previewMaterial">预览</button><span>专家验收意见.pdf</span><button type="button" data-action="previewMaterial">预览</button></div></details>`,
-    `<details class="process-extra-card process-history-section"><summary><span>退履约保证金</span><b>展开查看</b></summary><div class="process-history-fields"><div><span>保证金金额</span><strong>4.1 万</strong></div><div><span>退还状态</span><strong>待退还确认</strong></div><div><span>合同编号</span><strong>HT202608012</strong></div><div><span>责任部门</span><strong>财务处</strong></div></div><div class="process-history-files"><span>退保证金申请表.pdf</span><button type="button" data-action="previewMaterial">预览</button><span>合同保证金核对表.xlsx</span><button type="button" data-action="previewMaterial">预览</button></div></details>`
-  ];
-  if (stage <= 1) return "";
-  return cards.slice(1, stage).join("");
+function isInitiationStageSkipped(stageIndex) {
+  return stageIndex === 5 && (!state.initiationHasDeposit || state.initiationSkippedRefund);
 }
 
+function processSectionMarkup(title, body, className = "", collapsed = true) {
+  const hasHeaderAdd = className.includes("implementation-record-section");
+  const collapseButton = `<button class="application-section-collapse" type="button" aria-label="${collapsed ? "展开" : "收起"}${title}" aria-expanded="${String(!collapsed)}">${collapsed ? "⌄" : "⌃"}</button>`;
+  return `
+    <section class="wizard-pane is-active ${collapsed ? "is-collapsed" : ""} inherited-process-section ${className}">
+      <div class="panel-head compact-head application-section-head">
+        <h2>${title}</h2>
+        ${hasHeaderAdd ? `<div class="application-summary-actions"><button class="ghost-btn" type="button" data-action="addSectionAttachment">新增</button>${collapseButton}</div>` : collapseButton}
+      </div>
+      <div class="application-section-body">
+        ${body}
+      </div>
+    </section>
+  `;
+}
+
+function stageGroupMarkup(title, body, { collapsed = false, className = "" } = {}) {
+  return `
+    <section class="initiation-stage-group ${collapsed ? "is-collapsed" : ""} ${className}">
+      <header class="initiation-stage-group-head" role="button" tabindex="0" aria-expanded="${String(!collapsed)}">
+        <strong>${title}</strong>
+        <button class="initiation-stage-group-toggle" type="button" aria-label="${collapsed ? "展开" : "收起"}${title}">${collapsed ? "⌄" : "⌃"}</button>
+      </header>
+      <div class="initiation-stage-group-body">${body}</div>
+    </section>
+  `;
+}
+
+function inheritedProcessInfo(stageIndex) {
+  const expertAcceptance = initiationUsesExpertAcceptance();
+  const info = {
+    1: {
+      title: "采购与合同信息",
+      fields: [["采购方式", "校内论证后采购"], ["采购金额", "82 万"], ["合同名称", "网络安全态势感知平台建设合同"], ["合同签订日期", "2026-08-20"], ["供应商", "上海某信息技术有限公司"], ["履约保证金", state.initiationHasDeposit ? "4.1 万" : "无"]]
+    },
+    2: {
+      title: "付款记录",
+      fields: [["启动日期", "2026-09-01"], ["启动会材料", "启动会纪要.pdf"], ["付款记录", "1 笔"], ["阶段结论", "系统建设和联调完成"]]
+    },
+    3: {
+      title: "试运行信息",
+      fields: [["开始时间", "2026-11-01"], ["结束时间", "2026-11-30"], ["试运行结论", "稳定，可申请验收"], ["问题整改", "已关闭"]]
+    },
+    4: {
+      title: "验收信息",
+      fields: [["验收方式", expertAcceptance ? "专家验收" : "自行验收"], ["验收结论", "通过"], ["质保期开始", "2026-12-20"], ["整改记录", "已完成"]]
+    },
+    5: {
+      title: "履约保证金信息",
+      fields: [["保证金金额", state.initiationHasDeposit ? "4.1 万" : "无"], ["退还日期", "2027-01-10"], ["退还金额", state.initiationHasDeposit ? "4.1 万" : "无"], ["责任部门", "财务处"]]
+    }
+  }[stageIndex];
+  if (!info) return "";
+  return processSectionMarkup(info.title, `
+    <div class="process-history-fields">
+      ${info.fields.map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("")}
+    </div>
+  `, "inherited-stage-card");
+}
+
+function inheritedMaterialCard(stageIndex) {
+  const meta = initiationStageMeta[stageIndex];
+  if (!meta) return "";
+  if (isInitiationStageSkipped(stageIndex)) return "";
+  const files = initiationMaterialFiles(stageIndex);
+  if (!files.length) return "";
+  return processSectionMarkup(`${meta.label}材料`, `
+    <div class="attachment-check-table application-upload-table inherited-material-table">
+      <div><span>节点</span><span>材料名称</span><span>要求</span><span>状态</span><span>操作</span></div>
+      ${files.map((file, index) => `
+        <div><span>${meta.label}</span><strong>${file}</strong><span>${initiationMaterialRequirement(stageIndex, index, file)}</span><em>已归集</em><span class="attach-actions"><button type="button" data-action="previewMaterial">查看</button></span></div>
+      `).join("")}
+    </div>
+  `, "inherited-material-card");
+}
+
+function processInheritedCards(stage) {
+  return initiationStageMeta
+    .map((_, stageIndex) => stageIndex)
+    .filter((stageIndex) => stageIndex > 0 && stageIndex < stage && !isInitiationStageSkipped(stageIndex))
+    .map((stageIndex) => stageGroupMarkup(initiationStageMeta[stageIndex].label, `${inheritedProcessInfo(stageIndex)}${inheritedMaterialCard(stageIndex)}`, {
+      collapsed: true,
+      className: "is-prior-stage"
+    }))
+    .join("");
+}
+
+const acceptanceCollectionArchiveFiles = ["用户手册", "测试报告", "培训记录", "整改闭环材料", "其他佐证材料"];
+
 function initiationProcessExtraMarkup(stage) {
-  const acceptanceMode = initiationUsesExpertAcceptance() ? "expert" : "self";
-  const acceptanceLabel = acceptanceMode === "expert" ? "10 万元及以上专家验收" : "10 万元以下自行验收";
-  const acceptanceDescription = acceptanceMode === "expert"
-    ? "网信办确认材料后，由网信办组织专家验收并上传验收意见。"
-    : "网信办确认材料后，由申请人自行组织验收并上传验收材料。";
-  const specialAcceptancePending = state.initiationNeedsSpecialAcceptance && !state.initiationSpecialAcceptanceSubmitted;
-  const panels = [
-    "",
-    `
+  const expertReviewNeeded = acceptanceNeedsExpertReview();
+  const acceptanceStep = Math.min(acceptanceStepMax(), state.initiationAcceptanceStep || 0);
+  const acceptanceDecisionPanel = "";
+  const acceptanceRequestModule = (readonly = false) => readonly ? `
+      <section class="acceptance-module is-readonly-step">
+        <header><b>1</b><strong>验收申请提交资料</strong></header>
+        <div class="attachment-check-table application-upload-table acceptance-review-material-table acceptance-submitted-material-table">
+          <div><span>材料名称</span><span>已传附件</span><span>要求</span><span>状态</span><span>操作</span></div>
+          <div><strong>验收申请单</strong><span class="uploaded-attachment-list"><a href="javascript:void(0)" data-action="previewMaterial">验收申请单.pdf</a></span><span>必填</span><em>已上传 1 个</em><span class="attach-actions"><button type="button" data-action="previewMaterial">查看</button></span></div>
+          <div><strong>验收材料</strong><span class="uploaded-attachment-list"><a href="javascript:void(0)" data-action="previewMaterial">验收材料包.zip</a></span><span>必填</span><em>已上传 2 个</em><span class="attach-actions"><button type="button" data-action="previewMaterial">查看</button></span></div>
+        </div>
+      </section>
+    ` : `
+      <section class="acceptance-module">
+        <header><b>1</b><strong>验收申请材料</strong></header>
+        <div class="process-upload-line">
+          <span>验收申请单</span>
+          <strong><i class="required-star" aria-hidden="true">*</i>必填，待上传</strong>
+          <button type="button" data-action="uploadProjectAttachment">上传附件</button>
+        </div>
+        <div class="process-upload-line">
+          <span>验收材料</span>
+          <strong><i class="required-star" aria-hidden="true">*</i>必填，待上传</strong>
+          <button type="button" data-action="uploadProjectAttachment">上传附件</button>
+        </div>
+        <p class="process-extra-note">提交后流转给主管部门审核，本环节只维护申请材料。</p>
+      </section>
+    `;
+	  const acceptanceReviewModule = (readonly = false) => readonly ? `
+	      <section class="acceptance-module is-readonly-step">
+	        <header><b>2</b><strong>主管部门审核</strong></header>
+	        <div class="acceptance-review-summary">
+	          <span class="status-pill green">同意</span>
+	          <p>申请材料完整，同意进入下一步。</p>
+	        </div>
+	      </section>
+	    ` : `
+      <section class="acceptance-module">
+        <header><b>2</b><strong>主管部门审核</strong></header>
+        <div class="application-branch-conclusion application-branch-radio-group acceptance-decision-group">
+          <span>审核结论</span>
+          <label class="approval-option is-positive"><input type="radio" name="验收主管审核" checked /><span>同意</span></label>
+          <label class="approval-option is-warning"><input type="radio" name="验收主管审核" /><span>退回修改</span></label>
+          <label class="approval-option is-danger"><input type="radio" name="验收主管审核" /><span>不同意</span></label>
+        </div>
+	        <label class="acceptance-review-opinion"><span>审核意见</span><textarea>申请材料完整，同意进入下一步。</textarea></label>
+	      </section>
+	    `;
+	  const acceptanceCollectionRows = (readonly = false) => acceptanceCollectionArchiveFiles.map((file, index) => {
+	    const uploadedName = `${file}.${file.includes("整改") || file.includes("其他") ? "zip" : "pdf"}`;
+	    return readonly
+	      ? `<div><strong>${file}</strong><span>${uploadedName}</span><em>已上传 ${index === 4 ? 2 : 1} 个</em><span class="attach-actions"><button type="button" data-action="previewMaterial">查看</button></span></div>`
+	      : `<div><strong>${file}</strong><span>按需上传</span><em>待上传</em><span class="attach-actions"><button type="button" data-action="uploadProjectAttachment">上传</button></span></div>`;
+	  }).join("");
+	  const acceptanceCollectionModule = (readonly = false) => readonly ? `
+	      <section class="acceptance-module is-readonly-step">
+	        <header><b>3</b><strong>验收材料归集</strong></header>
+	        <div class="attachment-check-table application-upload-table acceptance-collection-upload-table acceptance-collection-readonly-table">
+	          <div><span>材料名称</span><span>已传附件</span><span>状态</span><span>操作</span></div>
+	          ${acceptanceCollectionRows(true)}
+	        </div>
+	        <div class="acceptance-review-summary">
+	          <span class="status-pill green">材料已补齐</span>
+	          <p>${expertReviewNeeded ? "专家验收日期：2026-12-15，专家意见材料已上传。" : "验收过程材料已归集，进入验收报告阶段。"}</p>
+	        </div>
+	      </section>
+	    ` : `
+	      <section class="acceptance-module">
+		        <header><b>3</b><strong>验收材料归集</strong><div class="acceptance-module-actions acceptance-module-head-actions"><button type="button" data-action="uploadProjectAttachment">上传附件</button></div></header>
+	        <div class="form-grid form-grid-3 acceptance-expert-fields acceptance-expert-fields-top">
+	          <label><span>专家验收日期（选填）</span><input value="2026-12-15" /></label>
+	          <label><span>专家意见材料（选填）</span><input value="专家意见材料.pdf" /></label>
+          </div>
+	        <div class="attachment-check-table application-upload-table acceptance-collection-upload-table">
+	          <div><span>材料名称</span><span>要求</span><span>状态</span><span>操作</span></div>
+	          ${acceptanceCollectionRows(false)}
+	        </div>
+      </section>
+    `;
+  const acceptanceReportModule = `
+      <section class="acceptance-module">
+        <header><b>4</b><strong>验收报告</strong></header>
+        <div class="form-grid form-grid-3">
+          <label><span>验收报告完成日期</span><input value="2026-12-20" /></label>
+          <label><span>质保期开始日期</span><input value="2026-12-20" /></label>
+          <label><span>验收报告上传</span><input value="验收报告最终稿.pdf" /></label>
+        </div>
+      </section>
+    `;
+  const acceptanceCityModule = `
+      <section class="acceptance-module">
+        <header><b>5</b><strong>市级项目验收报告</strong></header>
+        <div class="process-upload-line">
+          <span>市级验收清单</span>
+          <strong>市级验收清单.pdf</strong>
+          <button type="button" data-action="uploadProjectAttachment">上传附件</button>
+        </div>
+      </section>
+    `;
+  const acceptanceModuleStack = [
+    acceptanceRequestModule(acceptanceStep > 0),
+    acceptanceStep >= 1 ? acceptanceReviewModule(acceptanceStep > 1) : "",
+    acceptanceStep >= 2 ? acceptanceCollectionModule(acceptanceStep > 2) : "",
+    acceptanceStep >= 3 ? acceptanceReportModule : "",
+    acceptanceStep >= 4 ? acceptanceCityModule : ""
+  ].join("");
+  const panels = {
+    1: `
       <section class="process-extra-card">
         <h3>采购与合同信息</h3>
-        <div class="form-grid form-grid-3">
-          <label><span>采购方式</span><select><option>校内论证后采购</option><option>公开招标</option><option>单一来源</option><option>框架协议</option></select></label>
-          <label><span>采购金额</span><input value="82 万" /></label>
-          <label><span>预算编号</span><input value="YS-2026-01" /></label>
-          <label><span>合同名称</span><input value="网络安全态势感知平台建设合同" /></label>
-          <label><span>合同金额</span><input value="82 万" /></label>
-          <label><span>合同日期</span><input value="2026-08-20" /></label>
-          <label><span>是否有履约保证金</span><select id="initiationDepositSelect"><option value="yes" ${state.initiationHasDeposit ? "selected" : ""}>有</option><option value="no" ${!state.initiationHasDeposit ? "selected" : ""}>无，后续自动跳过退保</option></select></label>
-          <label><span>保证金金额</span><input value="4.1 万" /></label>
-          <label><span>供应商</span><input value="上海某信息技术有限公司" /></label>
+        <div class="form-grid form-grid-3 procurement-contract-grid">
+          <label><span>* 采购方式</span><select><option>校内论证后采购</option><option>公开招标</option><option>单一来源</option><option>框架协议</option></select></label>
+          <label><span>* 采购金额</span><input value="82 万" /></label>
+          <label><span>* 预算编号</span><input value="XXH-2026-01、AQZL-2026-02" /></label>
+          <label class="contract-field"><span>* 合同名称</span><input value="网络安全态势感知平台建设合同" /></label>
+          <label class="contract-field"><span>* 合同金额</span><input value="82 万" /></label>
+          <label class="contract-field"><span>* 合同签订日期</span><input value="2026-08-20" /></label>
+          <label class="guarantee-toggle-field"><span>* 是否有履约保证金</span><select id="initiationDepositSelect"><option value="yes" ${state.initiationHasDeposit ? "selected" : ""}>是</option><option value="no" ${!state.initiationHasDeposit ? "selected" : ""}>否</option></select></label>
+          <label class="guarantee-amount-field"><span>* 履约保证金金额</span><input value="${state.initiationHasDeposit ? "4.1 万" : ""}" placeholder="无" ${state.initiationHasDeposit ? "" : "disabled"} /></label>
+          <div class="form-grid-placeholder" aria-hidden="true"></div>
+          <label class="guarantee-toggle-field"><span>* 是否有质量保证金</span><select id="initiationQualityDepositSelect"><option value="yes" ${state.initiationHasQualityDeposit ? "selected" : ""}>是</option><option value="no" ${!state.initiationHasQualityDeposit ? "selected" : ""}>否</option></select></label>
+          <label class="guarantee-amount-field"><span>* 质量保证金金额</span><input value="${state.initiationHasQualityDeposit ? "2.6 万" : ""}" placeholder="无" ${state.initiationHasQualityDeposit ? "" : "disabled"} /></label>
+          <div class="form-grid-placeholder" aria-hidden="true"></div>
+          <label><span>* 供应商</span><input value="上海某信息技术有限公司" /></label>
         </div>
       </section>
     `,
-    `
+    2: `
       <section class="process-extra-card">
-        <h3>实施与付款记录</h3>
-        <div class="form-grid form-grid-3">
-          <label><span>启动日期</span><input value="2026-09-01" /></label>
-          <label><span>实施负责人</span><input value="王工" /></label>
-          <label><span>已付款合计</span><input value="24.6 万" readonly /></label>
+        <h3>付款计划及记录</h3>
+        <div class="payment-summary-grid">
+          <article><span>合同总金额</span><strong>82 万</strong></article>
+          <article class="is-paid"><span>已付款合计</span><strong>24.6 万</strong></article>
+          <article><span>待付款金额</span><strong>57.4 万</strong></article>
         </div>
-        <div class="process-upload-line">
-          <span>启动会材料</span>
-          <strong>启动会纪要.pdf</strong>
-          <button type="button" data-action="uploadProjectAttachment">上传/更换</button>
+        <div class="payment-record-head">
+          <h4>付款计划</h4>
+          <button type="button" data-action="addPaymentRecord">新增计划</button>
+        </div>
+        <div class="payment-plan-table">
+          <div><span>序号</span><span>预算编号</span><span>本项目预算</span><span>已付款金额</span><span>待付款金额</span></div>
+          <div><strong>1</strong><span>XXH-2026-01</span><span>82 万</span><span>24.6 万</span><span>57.4 万</span></div>
         </div>
         <div class="payment-record-head">
           <h4>付款记录</h4>
           <button type="button" data-action="addPaymentRecord">新增付款</button>
         </div>
         <div class="payment-record-table">
-          <div><span>序号</span><span>付款时间</span><span>付款金额</span><span>发票/凭证</span><span>证明材料</span><span>操作</span></div>
-          <div><strong>01</strong><span>2026-09-15</span><span>24.6 万</span><span>发票-001.pdf</span><span>付款审批单.pdf</span><span><button type="button" data-action="previewMaterial">预览</button></span></div>
+          <div><span>序号</span><span>付款时间</span><span>预算编号</span><span>付款金额</span><span>发票/凭证</span><span>证明材料</span><span>操作</span></div>
+          <div><strong>1</strong><span>2026-09-15</span><span>XXH-2026-01</span><span>24.6 万</span><span>发票-001.pdf</span><span>付款审批单.pdf</span><span class="payment-row-actions"><button type="button" data-action="addPaymentRecord">编辑</button><button type="button" data-action="removePaymentRecord">删除</button></span></div>
         </div>
       </section>
     `,
-    `
+    "2-record": `
+      <section class="process-extra-card">
+        <h3>实施过程记录材料</h3>
+        <div class="implementation-record-table attachment-check-table application-upload-table">
+          <div><span>序号</span><span>记录名称</span><span>日期</span><span>材料</span><span>操作</span></div>
+          <div><strong>启动日期</strong><span>启动会材料</span><span>2026-09-01</span><span>启动会纪要.pdf</span><span class="attach-actions"><button type="button" data-action="uploadProjectAttachment">上传</button><button type="button" data-action="removeAttachment">删除</button></span></div>
+          <div><strong>交付日期</strong><span>培训记录</span><span>2026-10-15</span><span>培训记录.pdf</span><span class="attach-actions"><button type="button" data-action="uploadProjectAttachment">上传</button><button type="button" data-action="removeAttachment">删除</button></span></div>
+          <div><strong>自定义记录</strong><span><input value="联调记录" /></span><span><input value="2026-10-30" /></span><span><button class="upload-inline-btn" type="button" data-action="uploadProjectAttachment">上传附件</button></span><span class="attach-actions"><button type="button" data-action="removeAttachment">删除</button></span></div>
+        </div>
+      </section>
+    `,
+    3: `
       <section class="process-extra-card">
         <h3>试运行信息</h3>
         <div class="form-grid form-grid-3">
-          <label><span>试运行开始时间</span><input value="2026-11-01" /></label>
-          <label><span>试运行结束时间</span><input value="2026-11-30" /></label>
+          <label><span>* 试运行开始时间</span><input value="2026-11-01" /></label>
+          <label><span>* 试运行结束时间</span><input value="2026-11-30" /></label>
           <label><span>试运行结论</span><select><option>稳定，可申请验收</option><option>需整改后再申请</option></select></label>
         </div>
-        <div class="application-note">培训记录和试运行报告为必填材料，其他附件可自定义新增。</div>
       </section>
     `,
-    `
+    4: `
       <section class="process-extra-card">
-        <h3>验收申请与验收过程</h3>
-        <div class="acceptance-branch-grid">
-          <article><h4>当前验收分支</h4><p>${acceptanceLabel}</p><strong>${acceptanceDescription}</strong></article>
-          <article><h4>验收后去向</h4><p>先判断特殊验收和履约保证金，再决定进入退保或直接归档。</p></article>
+        <h3>验收</h3>
+        <div class="acceptance-module-list">
+          ${acceptanceModuleStack}
         </div>
+        ${acceptanceDecisionPanel}
+      </section>
+    `,
+    5: `
+      <section class="process-extra-card">
+        <h3>履约保证金信息</h3>
         <div class="form-grid form-grid-3">
-          <label><span>验收方式</span><select id="initiationAcceptanceMode" disabled><option>${acceptanceLabel}</option></select></label>
-          <label><span>专家验收时间</span><input value="2026-12-15 14:00" /></label>
-          <label><span>质保期开始时间</span><input value="2026-12-20" /></label>
-        </div>
-        <div class="process-decision-panel">
-          <h4>验收后分流判断</h4>
-          <div class="form-grid form-grid-3">
-            <label><span>是否需要特殊验收</span><select id="initiationSpecialAcceptanceSelect"><option value="no" ${!state.initiationNeedsSpecialAcceptance ? "selected" : ""}>否</option><option value="yes" ${state.initiationNeedsSpecialAcceptance ? "selected" : ""}>是</option></select></label>
-            <label><span>是否有履约保证金</span><select id="initiationDepositDecision"><option value="yes" ${state.initiationHasDeposit ? "selected" : ""}>有，进入退保判断</option><option value="no" ${!state.initiationHasDeposit ? "selected" : ""}>无，自动跳过退保</option></select></label>
-          </div>
-          <p>无特殊验收且无履约保证金时，提交验收审批后自动跳过退履约保金，进入归档。</p>
+          <label><span>履约保证金金额</span><input value="4.1 万" /></label>
+          <label><span>退还日期</span><input value="2027-01-10" /></label>
+          <label><span>退还金额</span><input value="4.1 万" /></label>
+          <label><span>确认状态</span><select><option>待财务确认</option><option>已确认退还</option></select></label>
         </div>
       </section>
     `,
-    `
-      <section class="process-extra-card">
-        <h3>${specialAcceptancePending ? "特殊验收材料" : "退履约保证金判断"}</h3>
-        ${specialAcceptancePending ? `
-          <div class="application-note">当前项目需要先完成特殊验收。提交特殊验收材料后，${state.initiationHasDeposit ? "再进入退履约保证金确认" : "将自动跳过退履约保证金并进入归档"}。</div>
-        ` : `
-          <div class="form-grid form-grid-3">
-            <label><span>合同是否有履约保证金</span><select id="initiationDepositRefundDecision"><option value="yes" ${state.initiationHasDeposit ? "selected" : ""}>有，进入退保节点</option><option value="no" ${!state.initiationHasDeposit ? "selected" : ""}>无，自动跳过至归档</option></select></label>
-            <label><span>保证金金额</span><input value="4.1 万" ${state.initiationHasDeposit ? "" : "disabled"} /></label>
-            <label><span>退还状态</span><select ${state.initiationHasDeposit ? "" : "disabled"}><option>待财务确认</option><option>已退还</option></select></label>
-          </div>
-        `}
-      </section>
-    `,
-    `
-      <section class="process-extra-card">
-        <h3>归档材料池</h3>
-        <div class="archive-auto-grid">
-          <article><span>自动汇集</span><strong>申报、立项、采购、实施、试运行、验收、退保附件</strong></article>
-          <article><span>归档前补充</span><strong>支持新增补充材料，确认归档后流程结束</strong></article>
-        </div>
-      </section>
-    `
-  ];
-  return panels[stage] || "";
+	    6: `
+	      <section class="process-extra-card">
+	        <h3>归档材料池</h3>
+	        <div class="archive-inline-toolbar">
+	          <strong>已归档材料清单</strong>
+	          <span class="archive-inline-actions">
+	            <button class="ghost-btn" type="button" data-action="loadArchiveMaterialChecklist">加载材料清单</button>
+	            <button class="ghost-btn" type="button" data-action="addSectionAttachment">新增附件</button>
+	          </span>
+	        </div>
+	        <div class="attachment-check-table application-upload-table archive-material-inline-table">
+	          <div><span>材料名称</span><span>归档来源</span><span>状态</span><span>操作</span></div>
+	          ${archiveGeneratedMaterialRows()}
+	        </div>
+	      </section>
+	    `
+  };
+  const titles = {
+    1: "采购与合同信息",
+    2: "付款计划及记录",
+    3: "试运行信息",
+    4: "验收",
+    5: "履约保证金信息",
+    6: "归档材料池"
+  };
+  const panel = panels[stage] || "";
+  if (!panel || !titles[stage]) return panel;
+  const body = panel
+    .replace(/^\s*<section class="process-extra-card">\s*<h3>[^<]+<\/h3>/, "")
+    .replace(/<\/section>\s*$/, "");
+  const current = processSectionMarkup(titles[stage], body, "current-process-card", false);
+  return stage === 2 ? `${current}${processSectionMarkup("实施过程记录材料", panels["2-record"]
+    .replace(/^\s*<section class="process-extra-card">\s*<h3>[^<]+<\/h3>/, "")
+    .replace(/<\/section>\s*$/, ""), "current-process-card implementation-record-section", false)}` : current;
 }
 
 function renderInitiationFlow() {
   const stage = Math.max(0, Math.min(initiationStageMeta.length - 1, state.initiationStage || 0));
   const meta = initiationStageMeta[stage];
-  $("#initiationFlowCurrent") && ($("#initiationFlowCurrent").textContent = `当前：${meta.label}`);
+  $("#initiationFlowCurrent") && ($("#initiationFlowCurrent").textContent = meta.label);
   $$("[data-initiation-stage]").forEach((item) => {
     const itemStage = Number(item.dataset.initiationStage);
+    const skipped = isInitiationStageSkipped(itemStage);
     item.classList.toggle("is-current", itemStage === stage);
-    item.classList.toggle("is-done", itemStage < stage);
-    item.classList.toggle("is-skipped", state.initiationSkippedRefund && itemStage === 5);
+    item.classList.toggle("is-done", itemStage < stage && !skipped);
+    item.classList.toggle("is-skipped", skipped);
+    item.setAttribute("role", "button");
+    item.setAttribute("tabindex", "0");
+    item.setAttribute("aria-label", `查看${initiationStageMeta[itemStage]?.label || "当前"}环节快照`);
+    if (item.dataset.snapshotBound !== "true") {
+      item.dataset.snapshotBound = "true";
+      item.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        selectInitiationStageSnapshot(item.dataset.initiationStage);
+      });
+      item.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        selectInitiationStageSnapshot(item.dataset.initiationStage);
+      });
+    }
   });
   const submit = $("#initiationFlowSubmit");
-  if (submit) submit.textContent = stage === 5 && state.initiationNeedsSpecialAcceptance && !state.initiationSpecialAcceptanceSubmitted
-    ? "提交特殊验收材料"
-    : meta.button;
+  if (submit) submit.textContent = initiationSubmitLabel(stage, meta);
   const title = $("#initiationProcessTitle");
-  if (title) title.textContent = stage === 5 && state.initiationNeedsSpecialAcceptance && !state.initiationSpecialAcceptanceSubmitted
-    ? "特殊验收材料"
-    : `${meta.label}材料`;
-  const hint = $("#initiationProcessHint");
-  if (hint) {
-    hint.textContent = stage === 0
-      ? "提交立项后，项目将依次进入采购、实施、试运行、验收、退履约保金和归档。"
-      : stage === 4
-        ? `当前为${initiationUsesExpertAcceptance() ? "10 万元及以上专家验收" : "10 万元以下自行验收"}，需发起验收审批并完成验收后分流判断。`
-        : stage === 5 && state.initiationNeedsSpecialAcceptance && !state.initiationSpecialAcceptanceSubmitted
-          ? "当前需先上传特殊验收证明文件和特殊验收材料包。"
-          : `当前需上传：${meta.material}`;
+  if (title) title.textContent = stage === 2 ? "实施过程记录材料" : `${meta.label}材料`;
+  const currentGroupHead = $("#initiationCurrentGroupHead");
+  if (currentGroupHead) {
+    currentGroupHead.classList.toggle("is-hidden", stage === 0);
+    const label = currentGroupHead.querySelector("strong");
+    if (label) label.textContent = meta.label;
   }
+  const rootGroupHead = $("#initiationRootGroupHead");
+  if (rootGroupHead && rootGroupHead.dataset.directBound !== "true") {
+    rootGroupHead.dataset.directBound = "true";
+    rootGroupHead.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      toggleInitiationStageGroup(rootGroupHead);
+    });
+  }
+  if (rootGroupHead) setInitiationRootGroupCollapsed(stage > 0);
+  const amountLevelSelect = $("#initiationAmountLevelSelect");
+  if (amountLevelSelect) amountLevelSelect.value = initiationUsesExpertAcceptance() ? "expert" : "self";
+  const cityProjectSelect = $("#initiationCityProjectSelect");
+  if (cityProjectSelect) cityProjectSelect.value = state.initiationIsCityProject ? "yes" : "no";
+  const depositBaseSelect = $("#initiationDepositBaseSelect");
+  if (depositBaseSelect) depositBaseSelect.value = state.initiationHasDeposit ? "yes" : "no";
+  $$("input[name='initiationUseLibrary']").forEach((input) => {
+    input.checked = input.value === state.initiationUseLibrary;
+  });
+  renderInitiationLibraryProjectSelect();
+  const rootMaterialPane = $("#initiationRootMaterialPane");
+  const rootMaterialTable = $("#initiationRootMaterialTable");
+  if (rootMaterialPane) {
+    rootMaterialPane.classList.remove("is-hidden");
+    rootMaterialPane.classList.toggle("is-prior-readonly-section", stage > 0);
+    setApplicationSectionCollapsed(rootMaterialPane, stage > 0);
+  }
+  if (rootMaterialTable) {
+    const rootFiles = initiationMaterialFiles(0);
+    rootMaterialTable.innerHTML = `
+      <div><span>材料名称</span><span>要求</span><span>状态</span><span>操作</span></div>
+      ${rootFiles.map((file, index) => {
+        const required = initiationMaterialRequirement(0, index, file);
+        const status = stage > 0 ? "已归集" : initiationMaterialStatus(0, index, file);
+        return `<div><strong>${file}</strong><span>${required}</span><em>${status}</em><span class="attach-actions">${materialUploadActions(status)}</span></div>`;
+      }).join("")}
+    `;
+	  }
+	  const processPane = $("#initiationProcessPane");
+	  if (processPane) processPane.classList.toggle("is-hidden", stage === 0 || stage === 2 || stage === 4);
   const initiationSections = $$("#initiationFormPanel > .wizard-pane.is-active");
-  initiationSections.forEach((section, index) => {
-    const isPriorInitiationInfo = stage > 0 && index < 3;
+  initiationSections.forEach((section) => {
+    if (section.id === "initiationRootMaterialPane" || section.id === "initiationProcessPane") return;
+    const isPriorInitiationInfo = stage > 0 && section.classList.contains("initiation-root-item");
     setApplicationSectionCollapsed(section, isPriorInitiationInfo);
+    section.classList.toggle("is-prior-readonly-section", isPriorInitiationInfo);
   });
   const table = $("#initiationProcessMaterialTable");
   if (table) {
@@ -2669,42 +3205,93 @@ function renderInitiationFlow() {
     table.innerHTML = `
       <div><span>节点</span><span>材料名称</span><span>要求</span><span>状态</span><span>操作</span></div>
       ${files.map((file, index) => {
-        const isAcceptanceApproval = stage === 4 && file === "验收审批表";
-        const required = isAcceptanceApproval ? "审批必填" : index === 0 ? "必填" : "按需";
-        const status = stage === 0 ? "待生成" : isAcceptanceApproval ? "待提交审批" : index === 0 ? "待上传" : "待确认";
-        return `<div><span>${meta.label}</span><strong>${file}</strong><span>${required}</span><em>${status}</em><span class="attach-actions"><button type="button" data-action="uploadProjectAttachment">上传</button><button type="button" data-action="previewMaterial">查看</button></span></div>`;
+        const required = initiationMaterialRequirement(stage, index, file);
+        const status = initiationMaterialStatus(stage, index, file);
+        return `<div><span>${meta.label}</span><strong>${file}</strong><span>${required}</span><em>${status}</em><span class="attach-actions">${materialUploadActions(status)}</span></div>`;
       }).join("")}
-      <div><span>${meta.label}</span><strong>其他附件</strong><span>选填</span><em>可多选</em><span class="attach-actions"><button type="button" data-action="uploadProjectAttachment">＋ 添加附件</button></span></div>
     `;
   }
+  updateInitiationProcessMaterialActions(stage);
   const extra = $("#initiationProcessExtra");
   const inheritedExtra = $("#initiationInheritedExtra");
   if (inheritedExtra) inheritedExtra.innerHTML = processInheritedCards(stage);
+  $$("#initiationInheritedExtra .initiation-stage-group").forEach((group) => {
+    group.querySelectorAll("[data-action='uploadProjectAttachment'], [data-action='downloadTemplate'], [data-action='editProject'], [data-action='removeRepeatRow'], [data-action='addSectionAttachment']").forEach((button) => {
+      button.classList.add("is-hidden");
+    });
+  });
   if (extra) {
     extra.innerHTML = initiationProcessExtraMarkup(stage);
+    extra.querySelectorAll("[data-action='addSectionAttachment']").forEach((button) => {
+      if (button.dataset.directBound === "true") return;
+      button.dataset.directBound = "true";
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (createCustomAttachmentRow(button)) showToast("已新增一行自定义附件，可直接修改名称或上传文件。");
+      });
+    });
     [
-      ["#initiationDepositSelect", (value) => { state.initiationHasDeposit = value === "yes"; }],
-      ["#initiationDepositDecision", (value) => { state.initiationHasDeposit = value === "yes"; }],
+      ["#initiationExpertReviewDecision", (value) => {
+        state.initiationNeedsExpertReview = value === "yes";
+        renderInitiationFlow();
+      }],
+	      ["#initiationDepositSelect", (value) => {
+	        state.initiationHasDeposit = value === "yes";
+	        renderInitiationFlow();
+	      }],
+	      ["#initiationQualityDepositSelect", (value) => {
+	        state.initiationHasQualityDeposit = value === "yes";
+	        renderInitiationFlow();
+	      }],
       ["#initiationDepositRefundDecision", (value) => {
         state.initiationHasDeposit = value === "yes";
         renderInitiationFlow();
       }],
-      ["#initiationSpecialAcceptanceSelect", (value) => {
-        state.initiationNeedsSpecialAcceptance = value === "yes";
-      }]
     ].forEach(([selector, handler]) => {
       const field = extra.querySelector(selector);
       if (!field || field.dataset.directBound === "true") return;
       field.dataset.directBound = "true";
       field.addEventListener("change", () => handler(field.value));
     });
-    extra.querySelector("[data-action='addPaymentRecord']")?.addEventListener("click", (event) => {
+    extra.querySelectorAll("[data-action='addPaymentRecord']").forEach((button) => button.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
       openPaymentRecordDialog();
-      showToast("已打开新增付款。");
+      showToast(button.textContent.trim() === "编辑" ? "已打开付款记录编辑。" : "已打开新增付款。");
+    }));
+    extra.querySelectorAll("[data-action='nextAcceptanceStep']").forEach((button) => {
+      if (button.dataset.directBound === "true") return;
+      button.dataset.directBound = "true";
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        advanceAcceptanceStep();
+      });
     });
   }
+  [
+    ["#initiationCityProjectSelect", (value) => {
+      state.initiationIsCityProject = value === "yes";
+      state.initiationSkippedCityAcceptance = false;
+      renderInitiationFlow();
+    }],
+    ["#initiationDepositBaseSelect", (value) => {
+      state.initiationHasDeposit = value === "yes";
+      state.initiationSkippedRefund = false;
+      renderInitiationFlow();
+    }],
+    ["#initiationBudgetAmount", () => {
+      const field = $("#initiationAmountLevelSelect");
+      if (field) field.value = initiationUsesExpertAcceptance() ? "expert" : "self";
+      renderInitiationFlow();
+    }]
+  ].forEach(([selector, handler]) => {
+    const field = $(selector);
+    if (!field || field.dataset.directBound === "true") return;
+    field.dataset.directBound = "true";
+    field.addEventListener("change", () => handler(field.value));
+  });
   $$("#initiationFormPanel [data-action='addTeamRole'], #initiationFormPanel [data-action='addMilestone']").forEach((button) => {
     if (button.dataset.directBound === "true") return;
     button.dataset.directBound = "true";
@@ -2716,6 +3303,17 @@ function renderInitiationFlow() {
       if (opened) showToast(isMember ? "已打开新增成员。" : "已打开新增里程碑。");
     });
   });
+  bindProjectAttachmentUploadButtons($("#initiationFormPanel") || document);
+  ensureAttachmentHeaderAddButtons($("#initiationFormPanel") || document);
+  syncTableSequenceNumbers($("#initiationFormPanel") || document);
+  styleRequiredAsterisks($("#initiationFormPanel") || document);
+}
+
+function selectInitiationStageSnapshot(stageIndex) {
+  const nextStage = Math.max(0, Math.min(initiationStageMeta.length - 1, Number(stageIndex) || 0));
+  state.initiationStage = nextStage;
+  renderInitiationFlow();
+  showToast(`已切换到${initiationStageMeta[nextStage].label}环节快照。`);
 }
 
 function advanceInitiationFlow() {
@@ -2726,30 +3324,22 @@ function advanceInitiationFlow() {
     return;
   }
   if (stage === 4) {
-    state.initiationAcceptanceSubmitted = true;
-    if (!state.initiationNeedsSpecialAcceptance && !state.initiationHasDeposit) {
-      state.initiationSkippedRefund = true;
-      state.initiationStage = 6;
-      renderInitiationFlow();
-      showToast("验收审批已提交，无特殊验收且无履约保证金，已自动进入归档。");
+    if ((state.initiationAcceptanceStep || 0) < acceptanceStepMax()) {
+      advanceAcceptanceStep();
       return;
     }
-    state.initiationStage = 5;
-    renderInitiationFlow();
-    showToast(state.initiationNeedsSpecialAcceptance ? "验收审批已提交，请先完成特殊验收材料。" : "验收审批已提交，进入退履约保金确认。");
-    return;
-  }
-  if (stage === 5 && state.initiationNeedsSpecialAcceptance && !state.initiationSpecialAcceptanceSubmitted) {
-    state.initiationSpecialAcceptanceSubmitted = true;
+    state.initiationAcceptanceSubmitted = true;
+    state.initiationSkippedCityAcceptance = !state.initiationIsCityProject;
     if (!state.initiationHasDeposit) {
       state.initiationSkippedRefund = true;
       state.initiationStage = 6;
       renderInitiationFlow();
-      showToast("特殊验收材料已提交，无履约保证金，已自动跳过退保进入归档。");
+      showToast(state.initiationIsCityProject ? "验收审批已提交，市级材料在验收环节归集，无履约保证金，已自动进入归档。" : "验收审批已提交，无履约保证金，已自动进入归档。");
       return;
     }
+    state.initiationStage = 5;
     renderInitiationFlow();
-    showToast("特殊验收材料已提交，请继续确认退履约保证金。");
+    showToast("验收审批已提交，进入退履约保金确认。");
     return;
   }
   if (stage === 5 && !state.initiationHasDeposit) {
@@ -2764,13 +3354,144 @@ function advanceInitiationFlow() {
   showToast(`已进入${initiationStageMeta[state.initiationStage].label}环节。`);
 }
 
+function selectedInitiationLibraryProjects() {
+  const selectedIds = state.initiationSelectedLibraryProjectIds || [];
+  return initiationLibraryProjectOptions.filter((project) => selectedIds.includes(project.id));
+}
+
+function syncInitiationLibraryProjectFields() {
+  const selected = selectedInitiationLibraryProjects();
+  const codes = $("#initiationProjectCodes");
+  const status = $("#initiationProjectStatus");
+  const names = $("#initiationProjectNames");
+  const departments = $("#initiationProjectDepartments");
+  const amount = $("#initiationBudgetAmount");
+  if (codes) {
+    const baseNumber = 26002;
+    codes.value = selected.length
+      ? selected.map((_, index) => `XXH20${baseNumber + index}`).join("、")
+      : "系统提交后自动生成";
+  }
+  if (status) status.value = selected.length ? `已选择 ${selected.length} 个入库项目，可发起立项` : "请选择入库项目";
+  if (names) names.value = selected.map((project) => project.name).join("、");
+  if (departments) departments.value = [...new Set(selected.map((project) => project.department))].join("、");
+  if (amount && selected.length) {
+    const total = selected.reduce((sum, project) => sum + (Number(project.amount.replace(/[^\d.]/g, "")) || 0), 0);
+    amount.value = `${total} 元`;
+  }
+}
+
+function renderInitiationLibraryProjectSelect() {
+  const root = $("#initiationLibraryMultiSelect");
+  if (!root) return;
+  const selectedIds = state.initiationSelectedLibraryProjectIds || [];
+  const query = (state.initiationLibrarySearch || "").trim().toLowerCase();
+  const tags = root.querySelector("[data-library-selected-tags]");
+  const search = root.querySelector("[data-library-search]");
+  const options = root.querySelector("[data-library-options]");
+  const selected = selectedInitiationLibraryProjects();
+  if (tags) {
+    tags.innerHTML = selected.length
+      ? selected.map((project) => `
+          <button type="button" class="multi-project-tag" data-remove-library-project="${project.id}" title="移除${project.name}">
+            <span>${project.name}</span><i aria-hidden="true">×</i>
+          </button>
+        `).join("")
+      : `<span class="multi-project-placeholder">请选择入库项目</span>`;
+  }
+  if (search) search.value = state.initiationLibrarySearch || "";
+  const filtered = initiationLibraryProjectOptions.filter((project) => {
+    const haystack = [project.name, project.id, project.department, project.owner, project.type].join(" ").toLowerCase();
+    return !query || haystack.includes(query);
+  });
+  if (options) {
+    options.innerHTML = filtered.length ? filtered.map((project) => {
+      const checked = selectedIds.includes(project.id);
+      return `
+        <label class="multi-project-option ${checked ? "is-selected" : ""}">
+          <input type="checkbox" value="${project.id}" data-library-project-option ${checked ? "checked" : ""} />
+          <span><strong>${project.name}</strong><em>${project.id} · ${project.department} · ${project.type}</em></span>
+          <small>${project.amount}</small>
+        </label>
+      `;
+    }).join("") : `<div class="multi-project-empty">未找到匹配项目</div>`;
+  }
+  if (root.dataset.libraryBound !== "true") {
+    root.dataset.libraryBound = "true";
+    root.querySelector("[data-action='toggleLibraryProjectSelect']")?.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      root.classList.toggle("is-open");
+    });
+    search?.addEventListener("input", () => {
+      state.initiationLibrarySearch = search.value;
+      renderInitiationLibraryProjectSelect();
+    });
+  }
+  root.querySelectorAll("[data-library-project-option]").forEach((input) => {
+    if (input.dataset.libraryOptionBound === "true") return;
+    input.dataset.libraryOptionBound = "true";
+    input.addEventListener("change", () => {
+      const next = new Set(state.initiationSelectedLibraryProjectIds || []);
+      if (input.checked) next.add(input.value);
+      else next.delete(input.value);
+      state.initiationSelectedLibraryProjectIds = [...next];
+      renderInitiationLibraryProjectSelect();
+    });
+  });
+  root.querySelectorAll("[data-remove-library-project]").forEach((button) => {
+    if (button.dataset.removeBound === "true") return;
+    button.dataset.removeBound = "true";
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      state.initiationSelectedLibraryProjectIds = (state.initiationSelectedLibraryProjectIds || []).filter((id) => id !== button.dataset.removeLibraryProject);
+      renderInitiationLibraryProjectSelect();
+    });
+  });
+  syncInitiationLibraryProjectFields();
+}
+
+function updateInitiationProcessMaterialActions(stage) {
+  const pane = $("#initiationProcessPane");
+  const head = pane?.querySelector(":scope > .application-section-head");
+  if (!pane || !head) return;
+  let actions = head.querySelector(".application-summary-actions");
+  if (!actions) {
+    actions = document.createElement("div");
+    actions.className = "application-summary-actions";
+    const collapse = head.querySelector(".application-section-collapse");
+    if (collapse) actions.appendChild(collapse);
+    head.appendChild(actions);
+  }
+  let button = actions.querySelector("[data-initiation-process-add='true']");
+  if (!button) {
+    button = document.createElement("button");
+    button.className = "ghost-btn";
+    button.type = "button";
+    button.dataset.action = "addSectionAttachment";
+    button.dataset.initiationProcessAdd = "true";
+    button.textContent = "新增其他附件";
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (createCustomAttachmentRow(button)) showToast("已新增一行其他附件，可直接修改名称或上传文件。");
+    });
+    actions.insertBefore(button, actions.querySelector(".application-section-collapse"));
+  }
+  button.classList.toggle("is-hidden", ![1, 3, 4, 5, 6].includes(stage) || pane.classList.contains("is-hidden"));
+}
+
 function toggleInitiationLibraryMode() {
-  const useLibrary = $("#initiationUseLibrary")?.value !== "no";
+  const radioValue = document.querySelector("input[name='initiationUseLibrary']:checked")?.value;
+  const selectValue = $("#initiationUseLibrary")?.value;
+  const useLibrary = (radioValue || selectValue || "yes") !== "no";
   state.initiationUseLibrary = useLibrary ? "yes" : "no";
   $$(".initiation-linked-field").forEach((item) => item.classList.toggle("is-hidden", !useLibrary));
   $$(".initiation-free-field").forEach((item) => item.classList.toggle("is-hidden", useLibrary));
   const status = $("#initiationProjectStatus");
   if (status) status.value = useLibrary ? "已入库，可发起立项" : "手工立项，不关联申报库";
+  if (useLibrary) renderInitiationLibraryProjectSelect();
 }
 
 function closeAvatarMenu() {
@@ -2880,7 +3601,10 @@ function sortAdminTable(button) {
   const nextDirection = state.sortState[key] === "asc" ? "desc" : "asc";
   state.sortState[key] = nextDirection;
   const valueOf = (row) => {
-    const text = row.children[index]?.textContent.trim() || "";
+    const headCells = rowDataCells(table.querySelector(".admin-table-head"));
+    const dynamicIndex = headCells.findIndex((cell) => cell === button);
+    const resolvedIndex = dynamicIndex >= 0 ? dynamicIndex : index;
+    const text = rowDataCells(row)[resolvedIndex]?.textContent.trim() || "";
     if (key === "material") {
       const missing = text.match(/\d+/);
       return text.includes("齐") ? 0 : Number(missing?.[0] || 99);
@@ -2895,6 +3619,7 @@ function sortAdminTable(button) {
     })
     .forEach((row) => table.appendChild(row));
   button.textContent = button.textContent.replace(/[↑↓↕]/g, "") + (nextDirection === "asc" ? " ↑" : " ↓");
+  syncTableSequenceNumbers(table);
 }
 
 function renderProjectDetail() {
@@ -2919,27 +3644,45 @@ function renderProjectDetail() {
 
 function processStatusClass(status) {
   if (status.includes("未入库")) return "amber";
+  if (status.includes("已出库")) return "violet";
+  if (status.includes("已入库")) return "green";
   if (status.includes("通过") || status.includes("完成") || status.includes("已")) return "green";
   if (status.includes("退回") || status.includes("缺") || status.includes("延期")) return "amber";
   return "blue";
 }
 
+function processSummaryClass(label, tab = state.manageTab) {
+  if (tab !== "processReview") return "";
+  if (label === "未入库") return "is-library-unreviewed";
+  if (label === "已入库") return "is-library-stored";
+  if (label === "已出库") return "is-library-linked";
+  return "";
+}
+
 function processStageFromTab(tab = state.manageTab) {
   const stageMap = {
-    processReview: "立项",
+    processReview: "项目库",
     processApproval: "立项",
     processPurchase: "采购",
     processImplement: "实施",
     processTrial: "试运行",
     processAcceptance: "验收",
+    processCityAcceptance: "市级验收",
     processRefund: "退履约保金",
     processArchive: "归档"
   };
   return stageMap[tab] || processNodeData[tab]?.hero?.[0] || "项目过程";
 }
 
+function activeProcessStageLabels() {
+  return initiationStageMeta
+    .map((item, index) => ({ label: item.label, index }))
+    .filter((item) => !isInitiationStageSkipped(item.index))
+    .map((item) => item.label);
+}
+
 function processNodeTimeline(stage) {
-  const nodes = ["立项", "采购", "实施", "试运行", "验收", "退履约保金", "归档"];
+  const nodes = activeProcessStageLabels();
   const index = Math.max(0, nodes.indexOf(stage));
   return nodes.map((node, nodeIndex) => `
     <article class="${nodeIndex < index ? "done" : nodeIndex === index ? "active" : ""}">
@@ -2953,15 +3696,15 @@ function processNodeTimeline(stage) {
 const processMaterialStages = [
   {
     label: "立项",
-    files: ["立项确认单", "经费确认记录", "预算编号确认单"]
+    files: ["项目批复材料"]
   },
   {
     label: "采购",
-    files: ["采购申请流程文件", "盖章合同", "采购论证材料", "采购结果记录"]
+    files: ["采购申请流程文件", "采购论证材料", "盖章合同"]
   },
   {
     label: "实施",
-    files: ["启动会材料", "实施计划", "付款凭证", "阶段报告"]
+    files: ["付款计划及记录", "实施过程记录材料"]
   },
   {
     label: "试运行",
@@ -2969,17 +3712,67 @@ const processMaterialStages = [
   },
   {
     label: "验收",
-    files: ["验收申请", "验收审批表", "专家验收意见", "验收报告"]
+    files: ["验收申请", "验收审批表", "专家验收意见", "验收报告", "市级验收材料"]
   },
   {
     label: "退履约保金",
-    files: ["退保证金凭证", "无需退还说明", "特殊验收材料"]
+    files: ["退保证金凭证"]
   },
   {
     label: "归档",
     files: ["归档移交清单", "全流程材料包", "补充归档材料"]
   }
 ];
+
+function activeProcessMaterialStages() {
+  const activeLabels = activeProcessStageLabels();
+  return processMaterialStages.filter((stage) => activeLabels.includes(stage.label));
+}
+
+function archiveMaterialChecklistGroups() {
+  return [
+    {
+      label: "项目申报",
+      files: ["项目申报书", "预算测算明细表"]
+    },
+    ...activeProcessMaterialStages().map((stageItem) => stageItem.label === "验收"
+      ? { ...stageItem, files: acceptanceCollectionArchiveFiles }
+      : stageItem)
+  ];
+}
+
+function archiveMaterialFileName(file) {
+  if (/\.(pdf|docx?|xlsx?|zip|png|jpe?g)$/i.test(file)) return file;
+  if (/预算|测算|明细|清单/.test(file) && !/移交|市级|验收/.test(file)) return `${file}.xlsx`;
+  if (/材料包|全流程|整改|补充/.test(file)) return `${file}.zip`;
+  return `${file}.pdf`;
+}
+
+function archiveGeneratedMaterialRows(items = null) {
+  const sourceItems = items || archiveMaterialChecklistGroups().flatMap((stage) => stage.files.map((file, fileIndex) => ({
+    stage: stage.label,
+    file,
+    fileIndex
+  })));
+  return sourceItems.map((item, index) => {
+    const name = archiveMaterialFileName(item.file);
+    const isCustom = item.file.includes("补充") || item.file.includes("自定义");
+    const status = isCustom ? "待上传" : (item.stage === "归档" ? "待确认" : "已归档");
+    const uploadText = status === "已归档" ? "重新上传" : "上传附件";
+    return `
+      <div data-archive-generated-row="true">
+        <strong>${escapeHTML(name)}</strong>
+        <span>${escapeHTML(item.stage)}</span>
+        <em>${status}</em>
+        <span class="attach-actions">
+          <button type="button" data-action="previewMaterial">查看</button>
+          <button type="button" data-action="uploadProjectAttachment">${uploadText}</button>
+          <button type="button" data-action="removeAttachment">删除</button>
+        </span>
+      </div>
+    `;
+  }).join("");
+}
 
 function processMaterialStatus(stageIndex, currentIndex, material, fileIndex) {
   if (stageIndex < currentIndex) return "已归集";
@@ -2991,8 +3784,9 @@ function processMaterialStatus(stageIndex, currentIndex, material, fileIndex) {
 }
 
 function renderProcessMaterialRows(stage, task, material) {
-  const currentIndex = Math.max(0, processMaterialStages.findIndex((item) => item.label === stage));
-  const visibleStages = processMaterialStages.slice(0, currentIndex + 1);
+  const stages = activeProcessMaterialStages();
+  const currentIndex = Math.max(0, stages.findIndex((item) => item.label === stage));
+  const visibleStages = stages.slice(0, currentIndex + 1);
   const rows = visibleStages.map((stageItem, stageIndex) => stageItem.files.map((file, fileIndex) => {
     const status = processMaterialStatus(stageIndex, currentIndex, material, fileIndex);
     const canUpload = stageIndex === currentIndex && /缺|待|未/.test(status);
@@ -3008,19 +3802,13 @@ function renderProcessMaterialRows(stage, task, material) {
       </div>
     `;
   }).join("")).join("");
-  return `${rows}
-    <div>
-      <strong>${stage}</strong>
-      <span>其他附件</span>
-      <em>可多选</em>
-      <span class="row-actions"><button type="button" data-action="uploadProjectAttachment">＋ 添加附件</button></span>
-    </div>
-  `;
+  return rows;
 }
 
 function renderProcessMaterialGroups(stage, task, material) {
-  const currentIndex = Math.max(0, processMaterialStages.findIndex((item) => item.label === stage));
-  const visibleStages = processMaterialStages.slice(0, currentIndex + 1);
+  const stages = activeProcessMaterialStages();
+  const currentIndex = Math.max(0, stages.findIndex((item) => item.label === stage));
+  const visibleStages = stages.slice(0, currentIndex + 1);
   return visibleStages.map((stageItem, stageIndex) => `
     <article class="process-material-stage ${stageIndex === currentIndex ? "is-current" : ""}">
       <header>
@@ -3044,11 +3832,43 @@ function renderProcessMaterialGroups(stage, task, material) {
   `).join("");
 }
 
+function stageIndexByLabel(stage) {
+  return initiationStageMeta.findIndex((item) => item.label === stage);
+}
+
+function adminStageFields(stage) {
+  const acceptanceMode = acceptanceNeedsExpertReview() ? "专家验收" : "自行验收";
+  const fields = {
+    立项: [["立项金额", "420000 元"], ["预算编号", "XXH-2026-01"], ["预算名称", "2026 年信息化建设专项"], ["是否市级数字化项目", state.initiationIsCityProject ? "是" : "否"], ["项目优先级", "普通"]],
+    采购: [["采购方式", "校内论证后采购"], ["采购金额", "82 万"], ["合同名称", "网络安全态势感知平台建设合同"], ["合同签订日期", "2026-08-20"], ["供应商", "上海某信息技术有限公司"], ["履约保证金金额", state.initiationHasDeposit ? "4.1 万" : "无"]],
+    实施: [["合同总金额", "82 万"], ["已付款合计", "24.6 万"], ["待付款金额", "57.4 万"], ["启动日期", "2026-09-01"], ["启动会材料", "启动会纪要.pdf"], ["付款记录", "1 笔"]],
+    试运行: [["试运行开始时间", "2026-11-01"], ["试运行结束时间", "2026-11-30"], ["试运行结论", "稳定，可申请验收"], ["问题整改", "已关闭"]],
+    验收: [["验收方式", acceptanceMode], ["验收申请", "验收申请单、验收材料"], ["验收报告完成日期", "2026-12-20"], ["质保期开始日期", "2026-12-20"], ["市级项目", state.initiationIsCityProject ? "是" : "否"]],
+    退履约保金: [["触发条件", "有履约保证金"], ["保证金金额", "4.1 万"], ["退还日期", "2027-01-10"], ["退还金额", "4.1 万"]],
+    归档: [["自动汇集", "申报、立项、采购、实施、试运行、验收、退保附件"], ["归档前补充", "支持删除和补充材料"], ["归档状态", "待项目主管确认"], ["移交部门", "档案室"]]
+  };
+  return fields[stage] || [["当前阶段", stage], ["处理说明", "按当前节点维护业务字段、里程碑和附件。"]];
+}
+
+function adminStageFieldGrid(stage) {
+  return `<div class="process-history-fields admin-stage-fields">${adminStageFields(stage).map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("")}</div>`;
+}
+
+function adminStageAttachmentRows(stage, material = "齐全") {
+  const stageIndex = stageIndexByLabel(stage);
+  const files = stageIndex >= 0 ? initiationMaterialFiles(stageIndex) : [];
+  if (!files.length) return `<div><strong>${stage}</strong><span>无须上传附件</span><em>已按条件跳过</em><span class="row-actions"><button type="button" data-action="previewMaterial">查看规则</button></span></div>`;
+  return files.map((file, fileIndex) => {
+    const status = processMaterialStatus(stageIndex, stageIndex, material, fileIndex);
+    return `<div><strong>${stage}</strong><span>${file}</span><em>${status}</em><span class="row-actions"><button type="button" data-action="previewMaterial">预览</button><button type="button" data-action="downloadTemplate">下载</button></span></div>`;
+  }).join("");
+}
+
 function openProcessRowDetail(button, viewType = "detail") {
   const row = button.closest("[data-process-row]");
   if (!row) return false;
   const stage = row.dataset.processStage || processStageFromTab();
-  const cells = [...row.children].map((cell) => cell.textContent.trim());
+  const cells = rowCellTexts(row);
   const [code, name, dept, owner, year, status, task, amount, material] = cells;
   if (viewType === "progress") {
     openCustomDetail({
@@ -3109,7 +3929,16 @@ function openProcessRowDetail(button, viewType = "detail") {
       </section>
       <section class="process-modal-section">
         <h3>${stage}办理说明</h3>
-        <p>详情、进度和材料均按当前列表节点展示；申报与入库状态只在“项目申报库”中维护，不再混入项目过程节点。</p>
+        ${adminStageFieldGrid(stage)}
+      </section>
+      <section class="process-modal-section">
+        <h3>${stage}里程碑与附件</h3>
+        <div class="process-modal-list">
+          <div><span>里程碑事项</span><strong>${task}</strong><em>${status}</em></div>
+        </div>
+        <div class="process-material-file-list admin-stage-attachment-list">
+          ${adminStageAttachmentRows(stage, material)}
+        </div>
       </section>
     `
   });
@@ -3122,7 +3951,7 @@ function processSummaryLabel(text) {
 
 function processSummaryMatches(row, label) {
   if (label === "全部") return true;
-  const cells = [...row.children].map((cell) => cell.textContent.trim());
+  const cells = rowCellTexts(row);
   const [, , , , , status = "", task = "", amount = "", material = ""] = cells;
   const search = row.dataset.processSearch || cells.join(" ");
   if ([status, task, amount, material].some((item) => item === label || item.includes(label))) return true;
@@ -3186,6 +4015,25 @@ function filterProcessSummary(button) {
   showToast(`已切换到${label}。`);
 }
 
+function filterApplicationLibrarySummary(button) {
+  const label = button.dataset.processSummary || processSummaryLabel(button.textContent);
+  const card = button.closest(".process-list-card, .admin-main-card");
+  const rows = card?.querySelectorAll("[data-process-row]") || [];
+  card?.querySelectorAll("[data-process-summary]").forEach((item) => item.classList.toggle("is-active", item === button));
+  rows.forEach((row) => {
+    const status = row.dataset.libraryStatus || "";
+    row.classList.toggle("is-filtered-out", label !== "全部" && status !== label);
+  });
+  const empty = $("#processNodeEmpty");
+  const visibleCount = [...rows].filter((row) => !row.classList.contains("is-filtered-out")).length;
+  if (empty) {
+    empty.classList.toggle("is-hidden", visibleCount > 0);
+    const emptyLabel = empty.querySelector("strong");
+    if (emptyLabel) emptyLabel.textContent = label;
+  }
+  showToast(`已切换到${label}项目。`);
+}
+
 function renderProcessNode(tab = state.manageTab) {
   const data = processNodeData[tab] || processNodeData.processCreate;
   const title = $("#processNodeTitle");
@@ -3195,15 +4043,15 @@ function renderProcessNode(tab = state.manageTab) {
 
   title.textContent = data.title;
   summary.innerHTML = data.summary.map((item, index) => {
-    const label = processSummaryLabel(item);
-    return `<button class="${index === 0 ? "is-active" : ""}" type="button" data-process-summary="${label}">${item}</button>`;
+	  const label = processSummaryLabel(item);
+    return `<button class="${[index === 0 ? "is-active" : "", processSummaryClass(label, tab)].filter(Boolean).join(" ")}" type="button" data-process-summary="${label}">${item}</button>`;
   }).join("");
   rows.innerHTML = `
     <div class="admin-table-row admin-table-head">
       <span>编号</span><span>项目名称</span><span>申报部门</span><span>责任人</span><button class="sort-head" type="button" data-action="sortColumn" data-sort-key="year">年度 ↕</button><span>当前节点</span><span>当前任务</span><button class="sort-head" type="button" data-action="sortColumn" data-sort-key="budget">预算/合同 ↕</button><span>材料</span><span>操作</span>
     </div>
     ${data.rows.map((row) => `
-      <div class="admin-table-row" data-process-row data-process-stage="${processStageFromTab(tab)}" data-process-search="${row.join(" ")}">
+      <div class="admin-table-row" data-process-row data-process-stage="${processStageFromTab(tab)}" data-library-status="${row[5]}" data-process-search="${row.join(" ")}">
         <span>${row[0]}</span>
         <strong>${row[1]}</strong>
         <span>${row[2]}</span>
@@ -3218,10 +4066,13 @@ function renderProcessNode(tab = state.manageTab) {
     `).join("")}
     <div class="admin-table-row process-empty-row is-hidden" id="processNodeEmpty"><span>暂无<strong>全部</strong>分类数据</span></div>
   `;
+  syncTableSequenceNumbers(rows.parentElement || document);
   summary.querySelectorAll("[data-process-summary]").forEach((button) => {
     button.addEventListener("click", (event) => {
       event.preventDefault();
-      filterProcessSummary(button);
+      event.stopPropagation();
+      if (tab === "processReview") filterApplicationLibrarySummary(button);
+      else filterProcessSummary(button);
     });
   });
   rows.querySelectorAll("[data-action]").forEach((button) => {
@@ -3298,10 +4149,16 @@ function resetMyProjectFilters() {
 function openInitiationDialog() {
   state.initiationStage = 0;
   state.applicationBudgetAmount = null;
+  state.initiationUseLibrary = "yes";
+  state.initiationSelectedLibraryProjectIds = ["RK2026002"];
+  state.initiationLibrarySearch = "";
   state.initiationHasDeposit = true;
-  state.initiationNeedsSpecialAcceptance = false;
-  state.initiationSpecialAcceptanceSubmitted = false;
+  state.initiationHasQualityDeposit = true;
+  state.initiationIsCityProject = false;
+  state.initiationAcceptanceStep = 0;
+  state.initiationCityAcceptanceSubmitted = false;
   state.initiationAcceptanceSubmitted = false;
+  state.initiationSkippedCityAcceptance = false;
   state.initiationSkippedRefund = false;
   switchScreen("initiationFormPage");
   renderInitiationFlow();
@@ -3331,6 +4188,7 @@ function openApplicationForm(mode = "edit", options = {}) {
   state.applicationStage = 0;
   state.applicationDecision = "agree";
   state.applicationBudgetAmount = null;
+  state.applicationTerminated = false;
   state.applicationBranch = {
     standardConclusion: "待确认",
     expertConclusion: "待确认",
@@ -3338,18 +4196,18 @@ function openApplicationForm(mode = "edit", options = {}) {
   };
   state.applicationApprovals = isReadonly ? [
     {
-      node: "所在部门审核",
-      actor: "王主任",
-      time: "2026-07-14 10:10",
+      node: "网信办审核",
+      actor: "网信办李老师",
+      time: "2026-07-14 11:25",
       result: "同意",
-      opinion: "材料完整，建议进入下一环节。"
+      opinion: "已上传网信办评审材料。"
     },
     {
-      node: "信息中心审核",
-      actor: "信息中心李老师",
-      time: "2026-07-14 11:25",
-      result: "确认入库",
-      opinion: "已完成审核并确认入库，可进入立项。"
+      node: "校级审核",
+      actor: "校级评审组",
+      time: "2026-07-14 14:30",
+      result: "完成入库",
+      opinion: "已上传校级评审结论和评审材料，可进入立项。"
     }
   ] : [];
   state.applicationReturnScreen = options.returnScreen || (isReadonly ? previousScreen : "applyWizard");
@@ -3373,7 +4231,7 @@ function openApplicationForm(mode = "edit", options = {}) {
     renderApplicationApprovalTimeline();
   }
   const backButton = $("#applicationFormPanel [data-action='backToApplicationList']");
-  if (backButton) backButton.textContent = isReadonly ? "← 返回上一页" : "← 返回申报列表";
+  if (backButton) backButton.textContent = "返回";
   requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
 }
 
@@ -3440,6 +4298,7 @@ function addTeamRoleCard(button) {
     <strong>角色 ${nextIndex}</strong><span>${item[0]}</span><span>${item[1]}</span><span>${item[2]}</span><span>${item[3]}</span><span>${item[4]}</span><span class="repeat-actions"><button type="button" data-action="teamDetail">详情</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span>
   `;
   list.appendChild(row);
+  syncTableSequenceNumbers(list);
   row.scrollIntoView({ block: "nearest", behavior: "smooth" });
   return true;
 }
@@ -3464,6 +4323,7 @@ function addMilestoneRow(button) {
   row.className = "repeat-table-row is-added";
   row.innerHTML = `<strong>计划 ${nextIndex}</strong><span>${item[0]}</span><span>${item[1]}</span><span>${item[2]}</span><span>${item[3]}</span><span class="repeat-actions"><button type="button" data-action="viewDetail" data-detail="contentDetail">详情</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span>`;
   table.appendChild(row);
+  syncTableSequenceNumbers(table);
   row.scrollIntoView({ block: "nearest", behavior: "smooth" });
   return true;
 }
@@ -3471,7 +4331,9 @@ function addMilestoneRow(button) {
 function removeRepeatRow(button) {
   const row = button.closest(".repeat-table-row, .admin-table-row");
   if (!row || row.classList.contains("repeat-table-head") || row.classList.contains("admin-table-head")) return false;
+  const table = row.parentElement;
   row.remove();
+  syncTableSequenceNumbers(table || document);
   return true;
 }
 
@@ -3491,6 +4353,40 @@ function toggleApplicationSection(button) {
   return true;
 }
 
+function setInitiationRootGroupCollapsed(collapsed) {
+  const head = $("#initiationRootGroupHead");
+  const items = $$("#initiationFormPanel > .initiation-root-item");
+  head?.classList.toggle("is-collapsed", collapsed);
+  head?.setAttribute("aria-expanded", String(!collapsed));
+  const button = head?.querySelector(".initiation-stage-group-toggle");
+  if (button) {
+    button.textContent = collapsed ? "⌄" : "⌃";
+    button.setAttribute("aria-label", `${collapsed ? "展开" : "收起"}立项`);
+  }
+  items.forEach((item) => item.classList.toggle("is-hidden-by-stage-group", collapsed));
+  return Boolean(head);
+}
+
+function toggleInitiationStageGroup(target) {
+  const head = target.closest(".initiation-stage-group-head");
+  if (!head) return false;
+  if (head.id === "initiationRootGroupHead") {
+    return setInitiationRootGroupCollapsed(head.getAttribute("aria-expanded") !== "false");
+  }
+  const group = head.closest(".initiation-stage-group");
+  if (!group) return false;
+  const collapsed = !group.classList.contains("is-collapsed");
+  group.classList.toggle("is-collapsed", collapsed);
+  head.setAttribute("aria-expanded", String(!collapsed));
+  const title = head.querySelector("strong")?.textContent.trim() || "当前环节";
+  const button = head.querySelector(".initiation-stage-group-toggle");
+  if (button) {
+    button.textContent = collapsed ? "⌄" : "⌃";
+    button.setAttribute("aria-label", `${collapsed ? "展开" : "收起"}${title}`);
+  }
+  return true;
+}
+
 function setApplicationSectionCollapsed(section, collapsed) {
   if (!section) return false;
   section.classList.toggle("is-collapsed", collapsed);
@@ -3504,8 +4400,114 @@ function setApplicationSectionCollapsed(section, collapsed) {
 }
 
 function repeatRowData(row) {
-  const cells = [...row.children].filter((cell) => !cell.classList.contains("repeat-actions"));
+  const cells = [...row.children].filter((cell) => !cell.dataset.sequenceCell && !cell.classList.contains("repeat-actions"));
   return cells.map((cell) => cell.textContent.trim());
+}
+
+function rowDataCells(row) {
+  return [...(row?.children || [])].filter((cell) => !cell.dataset.sequenceCell);
+}
+
+function rowCellTexts(row) {
+  return rowDataCells(row).map((cell) => cell.textContent.trim());
+}
+
+function rowSequenceValue(row, container, fallback = "自动生成") {
+  const existing = row?.querySelector?.("[data-sequence-cell]")?.textContent.trim();
+  if (existing) return existing;
+  const list = container || row?.parentElement;
+  const count = list?.querySelectorAll?.(".repeat-table-row:not(.repeat-table-head)")?.length || 0;
+  return count ? String(count + 1) : fallback;
+}
+
+function styleRequiredAsterisks(scope = document) {
+  const labels = [
+    ...(scope.matches?.("label span") ? [scope] : []),
+    ...scope.querySelectorAll("label span")
+  ];
+  labels.forEach((span) => {
+    if (span.querySelector(".required-star")) return;
+    const text = span.textContent.trim();
+    if (!text.startsWith("*")) return;
+    const label = text.replace(/^\*\s*/, "");
+    span.innerHTML = `<i class="required-star" aria-hidden="true">*</i>${label}`;
+  });
+  const requiredCells = [
+    ...(scope.matches?.(".attachment-check-table > div:not(:first-child) span, .attachment-check-table > div:not(:first-child) em, .attachment-check-table > div:not(:first-child) strong") ? [scope] : []),
+    ...scope.querySelectorAll(".attachment-check-table > div:not(:first-child) span, .attachment-check-table > div:not(:first-child) em, .attachment-check-table > div:not(:first-child) strong")
+  ];
+  requiredCells.forEach((cell) => {
+    if (cell.querySelector(".required-star")) return;
+    const text = cell.textContent.trim();
+    if (text.startsWith("*")) {
+      cell.innerHTML = `<i class="required-star" aria-hidden="true">*</i>${text.replace(/^\*\s*/, "")}`;
+      return;
+    }
+    if (text.startsWith("必填")) {
+      cell.innerHTML = `<i class="required-star" aria-hidden="true">*</i>${text}`;
+    }
+  });
+}
+
+function syncTableSequenceNumbers(scope = document) {
+  const configs = [
+    [".admin-table", ".admin-table-row", ".admin-table-head"],
+    [".data-table", ".table-row", ".table-head"],
+    [".todo-table", ".todo-table-row", ".todo-table-head"],
+    [".attachment-check-table", ":scope > div", ":scope > div:first-child"],
+    [".repeat-table", ".repeat-table-row", ".repeat-table-head"]
+  ];
+  configs.forEach(([tableSelector, rowSelector, headSelector]) => {
+    const tables = [
+      ...(scope.matches?.(tableSelector) ? [scope] : []),
+      ...scope.querySelectorAll(tableSelector)
+    ];
+    tables.forEach((table) => {
+      const head = table.querySelector(headSelector);
+      if (!head) return;
+      if (table.matches(".attachment-check-table")) {
+        const originalHeadCells = rowDataCells(head).filter((cell) => !cell.matches("[data-sequence-cell]"));
+        const hasNodeColumn = originalHeadCells[0]?.textContent.trim() === "节点";
+        const hasUploadedColumn = originalHeadCells.some((cell) => cell.textContent.trim() === "已传附件");
+        table.classList.toggle("is-material-table", !hasUploadedColumn);
+        table.classList.toggle("is-node-column-hidden", hasNodeColumn);
+        [...table.querySelectorAll(rowSelector)].forEach((row) => {
+          const firstDataCell = rowDataCells(row).filter((cell) => !cell.matches("[data-sequence-cell]"))[0];
+          if (firstDataCell) firstDataCell.dataset.nodeCell = hasNodeColumn ? "true" : "false";
+        });
+      }
+      const hasSequenceHead = rowDataCells(head)[0]?.textContent.trim() === "序号";
+      if (hasSequenceHead && !head.firstElementChild?.dataset.sequenceCell) {
+        head.firstElementChild.classList.add("sequence-cell");
+        head.firstElementChild.dataset.sequenceCell = "true";
+      }
+      if (!hasSequenceHead && !head.querySelector("[data-sequence-cell]")) {
+        const cell = document.createElement("span");
+        cell.className = "sequence-cell";
+        cell.dataset.sequenceCell = "true";
+        cell.textContent = "序号";
+        head.insertBefore(cell, head.firstElementChild);
+      }
+      table.classList.add("has-row-sequence");
+      const rows = [...table.querySelectorAll(rowSelector)]
+        .filter((row) => row !== head && !row.classList.contains("process-empty-row"));
+      rows.forEach((row, index) => {
+        let cell = row.querySelector("[data-sequence-cell]");
+        if (!cell && hasSequenceHead && row.firstElementChild) {
+          cell = row.firstElementChild;
+          cell.classList.add("sequence-cell");
+          cell.dataset.sequenceCell = "true";
+        }
+        if (!cell) {
+          cell = document.createElement("span");
+          cell.className = "sequence-cell";
+          cell.dataset.sequenceCell = "true";
+          row.insertBefore(cell, row.firstElementChild);
+        }
+        cell.textContent = String(index + 1);
+      });
+    });
+  });
 }
 
 function openCustomDetail({ eyebrow, title, meta, body, type = "customDetail" }) {
@@ -3513,6 +4515,7 @@ function openCustomDetail({ eyebrow, title, meta, body, type = "customDetail" })
   $("#detailTitle").textContent = title;
   $("#detailMeta").textContent = meta;
   $("#detailBody").innerHTML = body;
+  styleRequiredAsterisks($("#detailBody"));
   $("#detailDrawer").dataset.detailType = type;
   $("#detailDrawer").classList.add("is-open");
   $("#detailDrawer").setAttribute("aria-hidden", "false");
@@ -3554,7 +4557,7 @@ function openChartExportPreview(button) {
     body: `
       <div class="chart-export-preview">
         <strong>${title}统计数据</strong>
-        <span>已整理当前图表对应的统计口径、筛选条件和明细数据。原型中展示导出确认。</span>
+        <span>已整理当前图表对应的统计范围、筛选条件和明细数据。原型中展示导出确认。</span>
         <div class="detail-table">
           <div><span>导出范围</span><span>当前图表</span></div>
           <div><strong>筛选条件</strong><span>2024-01-01 ~ 2024-12-31 · 全部单位</span></div>
@@ -3591,27 +4594,230 @@ function openApprovalActionDialog(scope = "待办审批") {
   });
 }
 
+function directText(node) {
+  if (!node) return "";
+  const text = [...node.childNodes]
+    .filter((child) => child.nodeType === Node.TEXT_NODE)
+    .map((child) => child.textContent.trim())
+    .join("");
+  return text || node.textContent.trim();
+}
+
+function defaultProjectUploadFiles(title = "项目附件") {
+  const cleanTitle = title.replace(/\.(pdf|docx?|xlsx?|zip|png|jpe?g)$/i, "");
+  if (cleanTitle.includes("付款")) return ["付款审批单.pdf", "银行回单.pdf"];
+  if (cleanTitle.includes("启动会")) return ["启动会纪要.pdf", "签到表.xlsx"];
+  return [`${cleanTitle || "项目附件"}.pdf`, "补充佐证材料.zip"];
+}
+
+function pendingUploadFileNames() {
+  return state.pendingUploadFiles.length ? state.pendingUploadFiles : defaultProjectUploadFiles(state.pendingUploadTitle);
+}
+
+function renderProjectUploadFileList(files = pendingUploadFileNames()) {
+  const list = $("#projectUploadFileList");
+  if (!list) return;
+  list.innerHTML = files.map((name, index) => `
+    <div>
+      <strong>${escapeHTML(name)}</strong>
+      <span>${index === 0 ? "主附件" : "补充附件"}</span>
+    </div>
+  `).join("");
+  const count = $("#projectUploadCount");
+  if (count) count.textContent = `已选择 ${files.length} 个文件`;
+}
+
+function handleProjectUploadInput(input) {
+  state.pendingUploadFiles = [...input.files].map((file) => file.name);
+  renderProjectUploadFileList();
+}
+
+function attachFileNamesMarkup(names) {
+  return `<small class="attachment-file-names">${names.map(escapeHTML).join("、")}</small>`;
+}
+
+function uploadedAttachmentLinksMarkup(names) {
+  return names.map((name) => `<a href="javascript:void(0)" data-action="previewMaterial">${escapeHTML(name)}</a>`).join("");
+}
+
+function applyUploadedFilesToRow(row, names) {
+  if (!row) return false;
+  const titleNode = row.querySelector("strong") || row.querySelector("span");
+  const title = directText(titleNode) || state.pendingUploadTitle || "项目附件";
+  const uploadedColumn = row.closest("#applicationAttachmentTable") ? row.querySelector(".uploaded-attachment-list") : null;
+  const shouldUseFileNameAsTitle = row.dataset.customAttachment === "true" || title.includes("自定义附件");
+  if (titleNode && shouldUseFileNameAsTitle && names[0]) {
+    titleNode.textContent = names[0];
+  }
+  if (uploadedColumn) {
+    uploadedColumn.classList.remove("is-empty");
+    uploadedColumn.innerHTML = uploadedAttachmentLinksMarkup(names);
+  } else if (titleNode) {
+    const nextTitle = shouldUseFileNameAsTitle && names[0] ? names[0] : title;
+    titleNode.innerHTML = `${escapeHTML(nextTitle)}${attachFileNamesMarkup(names)}`;
+  }
+  const status = row.querySelector("em");
+  if (status) status.textContent = `已上传 ${names.length} 个`;
+  row.classList.remove("is-attachment-removed");
+  row.classList.add("has-multiple-attachments");
+  row.dataset.uploadedFiles = names.join("、");
+  row.querySelectorAll("button").forEach((item) => {
+    item.disabled = false;
+    if (item.dataset.action === "uploadProjectAttachment") {
+      item.textContent = item.textContent.includes("添加") ? "继续添加" : "重新上传";
+    }
+  });
+  const actionCell = row.querySelector(".attach-actions");
+  if (actionCell && !actionCell.querySelector("[data-action='removeAttachment']")) {
+    actionCell.insertAdjacentHTML("beforeend", `<button type="button" data-action="removeAttachment">删除</button>`);
+    actionCell.querySelector("[data-action='removeAttachment']")?.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (removeAttachmentRow(event.currentTarget)) showToast("附件已删除。");
+    });
+  }
+  return true;
+}
+
+function isAddAttachmentButton(button) {
+  return button?.dataset?.action === "uploadProjectAttachment" && /添加附件/.test(button.textContent.trim());
+}
+
+function createCustomAttachmentRow(button) {
+  const directRow = button?.closest?.(".attachment-check-table > div");
+	  const table = directRow?.closest?.(".attachment-check-table")
+	    || button?.closest?.(".application-branch-attachments")?.querySelector?.(".attachment-check-table")
+	    || button?.closest?.(".current-process-card")?.querySelector?.(".attachment-check-table")
+	    || button?.closest?.(".process-extra-card")?.querySelector?.(".attachment-check-table")
+	    || button?.closest?.(".wizard-pane")?.querySelector?.(".attachment-check-table")
+	    || button?.closest?.("#detailBody")?.querySelector?.(".attachment-check-table");
+  const sourceRow = directRow
+    || [...(table?.querySelectorAll(":scope > div:not(:first-child)") || [])].find((row) => /添加附件/.test(row.textContent))
+    || table?.querySelector?.(":scope > div:last-child");
+  if (!table || !sourceRow || sourceRow === table.firstElementChild) return false;
+  const hasNodeColumn = table.classList.contains("is-node-column-hidden")
+    || rowDataCells(table.firstElementChild).some((cell) => cell.textContent.trim() === "节点");
+  const nodeLabel = hasNodeColumn
+    ? rowDataCells(sourceRow).filter((cell) => !cell.matches("[data-sequence-cell]"))[0]?.textContent.trim() || "当前节点"
+    : "";
+  const row = document.createElement("div");
+  row.dataset.customAttachment = "true";
+  row.innerHTML = table.id === "applicationAttachmentTable" ? `
+    <strong contenteditable="true" title="可直接修改附件名称">自定义附件</strong>
+    <span class="uploaded-attachment-list is-empty">未上传</span>
+    <span>选填</span>
+    <em>待上传</em>
+    <span class="attach-actions"><button type="button" data-action="uploadProjectAttachment">上传附件</button><button type="button" data-action="removeAttachment">删除</button></span>
+  ` : `
+    ${hasNodeColumn ? `<span>${escapeHTML(nodeLabel)}</span>` : ""}
+    <strong contenteditable="true" title="可直接修改附件名称">自定义附件</strong>
+    <span>选填</span>
+    <em>待上传</em>
+    <span class="attach-actions"><button type="button" data-action="uploadProjectAttachment">上传附件</button><button type="button" data-action="removeAttachment">删除</button></span>
+  `;
+  table.insertBefore(row, /添加附件/.test(sourceRow.textContent) ? sourceRow : sourceRow.nextElementSibling);
+  bindProjectAttachmentUploadButtons(row);
+  syncTableSequenceNumbers(table);
+  return true;
+}
+
+function ensureAttachmentHeaderAddButtons(scope = document) {
+  const panes = [
+    ...(scope.matches?.(".wizard-pane") ? [scope] : []),
+    ...scope.querySelectorAll(".wizard-pane")
+  ];
+  panes.forEach((pane) => {
+    const table = pane.querySelector(".attachment-check-table");
+    if (!table || table.classList.contains("is-readonly-attachments")) return;
+    const isInitiationFormPane = Boolean(pane.closest("#initiationFormPanel"));
+    const isEditableInitiationMaterialPane = isInitiationFormPane
+      && (pane.id === "initiationRootMaterialPane" || pane.id === "initiationProcessPane")
+      && !pane.classList.contains("is-hidden")
+      && !pane.classList.contains("is-prior-readonly-section");
+    if (
+      pane.closest("#applicationApprovalPane") ||
+      pane.classList.contains("inherited-process-section") ||
+      (isInitiationFormPane && !isEditableInitiationMaterialPane)
+    ) return;
+    if (!table.querySelector("[data-action='uploadProjectAttachment']")) return;
+    const head = pane.querySelector(":scope > .application-section-head");
+    if (!head || head.querySelector("[data-action='addSectionAttachment']")) return;
+    let actions = head.querySelector(".application-summary-actions");
+    if (!actions) {
+      actions = document.createElement("div");
+      actions.className = "application-summary-actions";
+      const collapse = head.querySelector(".application-section-collapse");
+      if (collapse) actions.appendChild(collapse);
+      head.appendChild(actions);
+    }
+    const button = document.createElement("button");
+    button.className = "ghost-btn";
+    button.type = "button";
+    button.dataset.action = "addSectionAttachment";
+    button.textContent = "新增附件";
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (createCustomAttachmentRow(button)) showToast("已新增一行自定义附件，可直接修改名称或上传文件。");
+    });
+    actions.insertBefore(button, actions.querySelector(".application-section-collapse"));
+  });
+}
+
+function confirmProjectAttachmentUpload() {
+  const names = pendingUploadFileNames();
+  const applied = applyUploadedFilesToRow(state.pendingUploadRow, names);
+  state.pendingUploadRow = null;
+  state.pendingUploadTitle = "";
+  state.pendingUploadFiles = [];
+  closeDetail();
+  showToast(applied ? `已上传 ${names.length} 个附件。` : "项目附件已上传。");
+}
+
+function bindProjectAttachmentUploadButtons(scope = document) {
+  scope.querySelectorAll("[data-action='uploadProjectAttachment']").forEach((button) => {
+    if (button.dataset.uploadBound === "true") return;
+    button.dataset.uploadBound = "true";
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (isAddAttachmentButton(button) && createCustomAttachmentRow(button)) {
+        showToast("已新增一行自定义附件，可直接修改名称或上传文件。");
+        return;
+      }
+      openProjectAttachmentUpload(button);
+      showToast("已打开项目附件上传。");
+    });
+  });
+}
+
 function openProjectAttachmentUpload(button) {
-  const row = button?.closest?.(".attachment-check-table > div");
-  const cells = row ? [...row.children].map((cell) => cell.textContent.trim()).filter(Boolean) : [];
+  const row = button?.closest?.(".attachment-check-table > div, .application-branch-file, .process-upload-line")
+    || button?.closest?.(".acceptance-module")?.querySelector?.(".acceptance-collection-upload-table > div:not(:first-child)");
+  const cells = row ? rowCellTexts(row).filter(Boolean) : [];
   const currentName = row && row !== row.parentElement?.firstElementChild
-    ? (row.querySelector("strong")?.textContent.trim() || cells[1] || cells[0] || "项目附件")
+    ? (directText(row.querySelector("strong")) || cells[1] || cells[0] || "项目附件")
     : "项目附件";
+  state.pendingUploadRow = row || null;
+  state.pendingUploadTitle = currentName;
+  state.pendingUploadFiles = [];
   openCustomDetail({
     eyebrow: "项目附件上传",
-    title: currentName.includes("添加") ? "添加其他附件" : currentName,
-    meta: "用户端附件上传，只选择文件，不关联模板环节",
+    title: currentName.includes("添加") ? "新增附件" : currentName,
+    meta: "",
     type: "projectAttachmentUpload",
     body: `
       <div class="project-upload-panel">
         <label class="project-upload-drop">
-          <input type="file" multiple />
+          <input type="file" multiple data-project-upload-input />
           <strong>选择附件</strong>
           <span>可一次选择多个文件，支持 PDF、Word、Excel、图片和压缩包。</span>
         </label>
-        <div class="upload-file-list">
-          <div><strong>${currentName === "项目附件" ? "项目申报书.pdf" : currentName}</strong><span>已选择</span></div>
-          <div><strong>补充佐证材料.zip</strong><span>待上传</span></div>
+        <div class="upload-selected-summary" id="projectUploadCount">已选择 ${defaultProjectUploadFiles(currentName).length} 个文件</div>
+        <div class="upload-file-list" id="projectUploadFileList">
+          ${defaultProjectUploadFiles(currentName).map((name, index) => `
+            <div><strong>${escapeHTML(name)}</strong><span>${index === 0 ? "主附件" : "补充附件"}</span></div>
+          `).join("")}
         </div>
         <div class="inline-action-row">
           <button class="primary-btn" type="button" data-action="confirmProjectAttachmentUpload">确认上传</button>
@@ -3619,6 +4825,15 @@ function openProjectAttachmentUpload(button) {
         </div>
       </div>
     `
+  });
+  const drawer = $("#detailDrawer");
+  drawer.querySelector("input[data-project-upload-input]")?.addEventListener("change", (event) => {
+    handleProjectUploadInput(event.currentTarget);
+  });
+  drawer.querySelector("[data-action='confirmProjectAttachmentUpload']")?.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    confirmProjectAttachmentUpload();
   });
 }
 
@@ -3632,47 +4847,48 @@ function openPaymentRecordDialog() {
       <div class="detail-form">
         <label><span>付款时间</span><input value="2026-10-15" /></label>
         <label><span>付款金额</span><input value="待填写" /></label>
-        <label><span>发票/凭证</span><input value="待上传" readonly /></label>
-        <label><span>证明材料</span><input value="待上传" readonly /></label>
-      </div>
-      <div class="project-upload-panel compact-upload-panel">
-        <label class="project-upload-drop">
-          <input type="file" multiple />
-          <strong>选择付款附件</strong>
-          <span>可一次选择发票、付款审批单、银行回单等多个文件。</span>
-        </label>
+        <label><span>发票/凭证</span><button class="upload-inline-btn" type="button" data-action="uploadProjectAttachment">上传附件</button></label>
+        <label><span>证明材料</span><button class="upload-inline-btn" type="button" data-action="uploadProjectAttachment">上传附件</button></label>
       </div>
       <div class="inline-action-row">
-        <button class="primary-btn" type="button" data-close-detail>保存付款</button>
+        <button class="primary-btn" type="button" data-close-detail>保存</button>
         <button class="ghost-btn" type="button" data-close-detail>取消</button>
       </div>
     `
   });
+  bindProjectAttachmentUploadButtons($("#detailDrawer") || document);
 }
 
 function openInitiationMemberDialog(button, mode = "new") {
   const row = button?.closest?.(".repeat-table-row");
   const cells = row && !row.classList.contains("repeat-table-head") ? repeatRowData(row) : [];
-  const [role = "实施联系人", name = "王工", dept = "网络中心", duty = "实施协调、材料归集"] = cells;
+  const [role = "实施联系人", name = "王工", dept = "网络中心", phone = "139****1120", email = "wangg@sdju.edu.cn", duty = "实施协调、材料归集"] = cells;
+  const sequence = rowSequenceValue(row, button?.closest?.(".wizard-pane")?.querySelector(".repeat-table-team"));
   const isEdit = mode === "edit";
   const isDetail = mode === "detail";
   openCustomDetail({
     eyebrow: isDetail ? "成员详情" : isEdit ? "编辑成员" : "新增成员",
     title: isDetail ? `${role}：${name}` : "立项团队成员",
-    meta: isDetail ? `${dept} · ${duty}` : "维护角色、姓名、部门和职责",
+    meta: isDetail ? `${dept} · ${phone} · ${email}` : "维护角色、姓名、部门、联系方式和职责",
     body: isDetail ? `
-      <div class="detail-table team-col">
+      <div class="detail-table member-detail-table">
         <div><span>字段</span><span>内容</span></div>
+        <div><strong>序号</strong><span>${sequence}</span></div>
         <div><strong>角色</strong><span>${role}</span></div>
         <div><strong>姓名</strong><span>${name}</span></div>
         <div><strong>部门</strong><span>${dept}</span></div>
+        <div><strong>手机号</strong><span>${phone}</span></div>
+        <div><strong>邮箱</strong><span>${email}</span></div>
         <div><strong>职责</strong><span>${duty}</span></div>
       </div>
     ` : `
       <div class="detail-form">
+        <label><span>序号</span><input value="${sequence}" readonly /></label>
         <label><span>角色</span><input value="${role}" /></label>
         <label><span>姓名</span><input value="${name}" /></label>
         <label><span>部门</span><input value="${dept}" /></label>
+        <label><span>手机号</span><input value="${phone}" /></label>
+        <label><span>邮箱</span><input value="${email}" /></label>
         <label class="full-row"><span>职责</span><textarea>${duty}</textarea></label>
       </div>
       <div class="inline-action-row">
@@ -3688,6 +4904,7 @@ function openInitiationMilestoneDialog(button, mode = "new") {
   const row = button?.closest?.(".repeat-table-row");
   const cells = row && !row.classList.contains("repeat-table-head") ? repeatRowData(row) : [];
   const [stage = "采购", time = "2026-08", eventName = "采购论证与合同签订", owner = "采购办", material = "采购论证、采购结果、合同文件"] = cells;
+  const sequence = rowSequenceValue(row, button?.closest?.(".wizard-pane")?.querySelector(".repeat-table-milestone"));
   openCustomDetail({
     eyebrow: mode === "detail" ? "里程碑详情" : "新增里程碑",
     title: eventName,
@@ -3695,19 +4912,35 @@ function openInitiationMilestoneDialog(button, mode = "new") {
     body: mode === "detail" ? `
       <div class="detail-table">
         <div><span>字段</span><span>内容</span></div>
+        <div><strong>序号</strong><span>${sequence}</span></div>
         <div><strong>流程节点</strong><span>${stage}</span></div>
         <div><strong>计划时间</strong><span>${time}</span></div>
         <div><strong>里程碑事项</strong><span>${eventName}</span></div>
         <div><strong>责任人</strong><span>${owner}</span></div>
         <div><strong>材料要求</strong><span>${material}</span></div>
       </div>
+      <section class="process-modal-section">
+        <h3>${stage}业务信息</h3>
+        ${adminStageFieldGrid(stage)}
+      </section>
+      <section class="process-modal-section">
+        <h3>${stage}附件</h3>
+        <div class="process-material-file-list admin-stage-attachment-list">
+          ${adminStageAttachmentRows(stage, "齐全")}
+        </div>
+      </section>
     ` : `
       <div class="detail-form">
-        <label><span>流程节点</span><select><option>${stage}</option><option>立项</option><option>采购</option><option>实施</option><option>试运行</option><option>验收</option><option>退履约保金</option><option>归档</option></select></label>
+        <label><span>序号</span><input value="${sequence}" readonly /></label>
+        <label><span>流程节点</span><select><option>${stage}</option><option>立项</option><option>采购</option><option>实施</option><option>试运行</option><option>验收</option><option>市级验收</option><option>退履约保金</option><option>归档</option></select></label>
         <label><span>计划时间</span><input value="${time}" /></label>
         <label><span>责任人</span><input value="${owner}" /></label>
         <label class="full-row"><span>里程碑事项</span><textarea>${eventName}</textarea></label>
         <label class="full-row"><span>材料要求</span><textarea>${material}</textarea></label>
+        <label class="full-row project-upload-panel compact-upload-panel">
+          <span>关联附件</span>
+          <span class="project-upload-drop"><input type="file" multiple />上传/更换多附件</span>
+        </label>
       </div>
       <div class="inline-action-row">
         <button class="primary-btn" type="button" data-close-detail>保存里程碑</button>
@@ -3832,21 +5065,21 @@ function openSubmitSuccessDetail() {
   openCustomDetail({
     eyebrow: "提交成功",
       title: "网络安全态势感知平台已提交申报",
-      meta: "申报已提交 · 当前节点：所在部门审核",
+      meta: "申报已提交 · 当前节点：网信办审核",
     body: `
       <div class="detail-stat-grid">
         <article><span>提交结果</span><strong>已提交成功</strong></article>
-        <article><span>当前节点</span><strong>所在部门审核</strong></article>
-        <article><span>下一步</span><strong>信息中心审核</strong></article>
-        <article><span>预计提醒</span><strong>4 个关键节点</strong></article>
+        <article><span>当前节点</span><strong>网信办审核</strong></article>
+        <article><span>下一步</span><strong>网信办审核</strong></article>
+        <article><span>预计提醒</span><strong>3 个关键节点</strong></article>
       </div>
       <section class="detail-section">
         <h3>申报审核流程</h3>
         <div class="progress-milestone-list">
-          <article class="done"><b>1</b><strong>申请人申报</strong><span>申报表单、建设说明、经费关联和附件已提交。</span></article>
-          <article class="active"><b>2</b><strong>所在部门审核</strong><span>部门审核通过后进入信息中心审核。</span></article>
-          <article><b>3</b><strong>信息中心审核</strong><span>确认材料、预算和建设必要性。</span></article>
-          <article><b>4</b><strong>是否入库</strong><span>确认入库后才可发起立项。</span></article>
+          <article class="done"><b>1</b><strong>项目申报</strong><span>申报表单、建设说明、经费关联和附件已提交。</span></article>
+          <article class="active"><b>2</b><strong>网信办审核</strong><span>上传网信办评审材料。</span></article>
+          <article><b>3</b><strong>校级审核</strong><span>上传校级评审材料。</span></article>
+          <article><b>4</b><strong>进入项目库</strong><span>审核结论齐备后才可发起立项。</span></article>
         </div>
       </section>
     `
@@ -3880,15 +5113,32 @@ function filterLedgerSummary(button) {
     pending: "待处理项目",
     approval: "待立项项目",
     missing: "缺材料项目",
+    acceptance: "待验收项目",
+    accepted: "已完成验收项目",
+    refund: "待退履约保证金项目",
     archive: "待归档项目"
   };
   const card = button.closest(".admin-main-card");
-  card?.querySelectorAll("[data-ledger-filter]").forEach((item) => item.classList.toggle("is-active", item === button));
+  const buttons = [...(card?.querySelectorAll("[data-ledger-filter]") || [])];
+  if (filter === "all") {
+    buttons.forEach((item) => item.classList.toggle("is-active", item === button));
+  } else {
+    buttons.find((item) => item.dataset.ledgerFilter === "all")?.classList.remove("is-active");
+    button.classList.toggle("is-active");
+    if (!buttons.some((item) => item.dataset.ledgerFilter !== "all" && item.classList.contains("is-active"))) {
+      buttons.find((item) => item.dataset.ledgerFilter === "all")?.classList.add("is-active");
+    }
+  }
+  const activeFilters = buttons
+    .filter((item) => item.classList.contains("is-active"))
+    .map((item) => item.dataset.ledgerFilter)
+    .filter((item) => item !== "all");
   card?.querySelectorAll("[data-ledger-row]").forEach((row) => {
     const buckets = (row.dataset.ledgerBucket || "").split(/\s+/);
-    row.classList.toggle("is-filtered-out", filter !== "all" && !buckets.includes(filter));
+    row.classList.toggle("is-filtered-out", activeFilters.length > 0 && !activeFilters.every((item) => buckets.includes(item)));
   });
-  showToast(`已切换到${rowLabels[filter] || "当前分类"}。`);
+  const activeLabels = activeFilters.map((item) => rowLabels[item] || item);
+  showToast(activeLabels.length ? `已组合筛选：${activeLabels.join("、")}。` : "已切换到全部项目。");
   return true;
 }
 
@@ -3907,6 +5157,157 @@ function removeAttachmentRow(button) {
   return true;
 }
 
+function removePaymentRecordRow(button) {
+  const row = button.closest(".payment-record-table > div");
+  const table = row?.parentElement;
+  if (!row || row === table?.firstElementChild) return false;
+  row.remove();
+  syncTableSequenceNumbers(table || document);
+  return true;
+}
+
+function archiveAttachmentDialogRows() {
+  return activeProcessMaterialStages().map((stageItem) => stageItem.files.map((file) => `
+    <div><strong>${stageItem.label}</strong><span>${file}</span><span>按需</span><em>已归集</em><span class="attach-actions"><button type="button" data-action="uploadProjectAttachment">上传</button><button type="button" data-action="removeAttachment">删除</button></span></div>
+  `).join("")).join("");
+}
+
+function archiveMaterialChecklistMarkup() {
+  return archiveMaterialChecklistGroups().map((stageItem, stageIndex) => `
+    <section class="archive-material-select-group">
+      <header>
+        <strong>${escapeHTML(stageItem.label)}</strong>
+        <span>${stageItem.files.length} 项材料</span>
+      </header>
+      <div class="archive-material-select-list">
+        ${stageItem.files.map((file, fileIndex) => {
+          const id = `archive-material-${stageIndex}-${fileIndex}`;
+          return `
+            <label for="${id}">
+              <input id="${id}" type="checkbox" data-archive-stage="${escapeHTML(stageItem.label)}" data-archive-file="${escapeHTML(file)}" checked />
+              <span>${escapeHTML(file)}</span>
+              <em>${escapeHTML(archiveMaterialFileName(file))}</em>
+            </label>
+          `;
+        }).join("")}
+      </div>
+    </section>
+  `).join("");
+}
+
+function openArchiveMaterialChecklistDialog(button) {
+  state.pendingArchiveMaterialTable = button?.closest?.(".current-process-card")?.querySelector?.(".archive-material-inline-table")
+    || button?.closest?.(".process-extra-card")?.querySelector?.(".archive-material-inline-table")
+    || $("#initiationProcessExtra .archive-material-inline-table");
+  openCustomDetail({
+    eyebrow: "归档材料",
+    title: "加载材料清单",
+    meta: "按阶段选择需要生成到归档池的材料",
+    type: "archiveMaterialChecklist",
+    body: `
+      <div class="archive-material-picker">
+        ${archiveMaterialChecklistMarkup()}
+      </div>
+      <div class="inline-action-row">
+        <button class="ghost-btn" type="button" data-close-detail>取消</button>
+        <button class="primary-btn" type="button" data-action="confirmArchiveMaterialChecklist">确认生成材料清单</button>
+      </div>
+    `
+  });
+}
+
+function confirmArchiveMaterialChecklist() {
+  const table = state.pendingArchiveMaterialTable || $("#initiationProcessExtra .archive-material-inline-table");
+  if (!table) return false;
+  const detailBody = $("#detailBody");
+  const selectedInputs = detailBody ? [...detailBody.querySelectorAll("[data-archive-file]:checked")] : [];
+  const selected = selectedInputs.map((input) => ({
+    stage: input.dataset.archiveStage || "归档",
+    file: input.dataset.archiveFile || "自定义附件"
+  }));
+  if (!selected.length) {
+    showToast("请至少选择一项材料。");
+    return true;
+  }
+  const head = table.querySelector(":scope > div:first-child")?.outerHTML || `<div><span>材料名称</span><span>归档来源</span><span>状态</span><span>操作</span></div>`;
+  table.innerHTML = `${head}${archiveGeneratedMaterialRows(selected)}`;
+  bindProjectAttachmentUploadButtons(table);
+  syncTableSequenceNumbers(table);
+  state.pendingArchiveMaterialTable = null;
+  closeDetail();
+  showToast(`已生成 ${selected.length} 项归档材料清单。`);
+  return true;
+}
+
+function toggleBudgetNameSelect(button) {
+  button?.closest?.(".budget-name-multi-select")?.classList.toggle("is-open");
+}
+
+function openArchiveMaterialDialog() {
+  openCustomDetail({
+    eyebrow: "归档",
+    title: "归档附件清单",
+    meta: "全流程附件归集",
+    type: "archiveMaterialPool",
+    body: `
+      <div class="attachment-check-table application-upload-table archive-dialog-table">
+        <div><span>节点</span><span>附件名称</span><span>要求</span><span>状态</span><span>操作</span></div>
+        ${archiveAttachmentDialogRows()}
+      </div>
+      <div class="inline-action-row">
+        <button class="ghost-btn" type="button" data-action="addSectionAttachment">新增附件</button>
+        <button class="primary-btn" type="button" data-close-detail>确认归档附件</button>
+      </div>
+    `
+  });
+  const body = $("#detailBody");
+  if (body) {
+    bindProjectAttachmentUploadButtons(body);
+    syncTableSequenceNumbers(body);
+  }
+}
+
+function openReminderMarkDialog(button) {
+  const row = button.closest(".reminder-table > div, .reminder-card");
+  state.pendingReminderMarkRow = row || null;
+  const title = row?.querySelector("strong")?.textContent.trim() || "待办事项";
+  openCustomDetail({
+    eyebrow: "待办标记",
+    title,
+    meta: "重点、置顶和备注",
+    type: "reminderMark",
+    body: `
+      <div class="detail-form reminder-mark-form">
+        <label><span>标记类型</span><select id="reminderMarkType"><option>标记为重点</option><option>置顶</option><option>标记为重点并置顶</option></select></label>
+        <label><span>备注</span><textarea id="reminderMarkNote" placeholder="填写备注，便于后续跟进">需优先跟进材料补交。</textarea></label>
+      </div>
+      <div class="inline-action-row">
+        <button class="primary-btn" type="button" data-action="confirmReminderMark">确认标记</button>
+        <button class="ghost-btn" type="button" data-close-detail>取消</button>
+      </div>
+    `
+  });
+}
+
+function confirmReminderMark() {
+  const row = state.pendingReminderMarkRow;
+  if (!row) return false;
+  const type = $("#reminderMarkType")?.value || "标记为重点";
+  const note = $("#reminderMarkNote")?.value?.trim() || "";
+  row.classList.add("is-marked-reminder");
+  row.classList.toggle("is-pinned-reminder", type.includes("置顶"));
+  row.dataset.markNote = note;
+  const action = row.querySelector("[data-action='markReminderRead']");
+  if (action) action.textContent = type.includes("置顶") ? "已置顶" : "已重点";
+  if (!row.querySelector(".reminder-mark-note") && note) {
+    const title = row.querySelector("strong");
+    title?.insertAdjacentHTML("afterend", `<small class="reminder-mark-note">${escapeHTML(note)}</small>`);
+  }
+  state.pendingReminderMarkRow = null;
+  closeDetail();
+  return true;
+}
+
 function handleDirectDetailAction(button) {
   const actionType = button.dataset.detail || button.dataset.action;
   if (actionType === "removeAttachment") {
@@ -3916,6 +5317,37 @@ function handleDirectDetailAction(button) {
   if (actionType === "batchProcess") {
     openApprovalActionDialog("一键办理");
     return true;
+  }
+  if (actionType === "removePaymentRecord") {
+    if (removePaymentRecordRow(button)) showToast("付款记录已删除。");
+    return true;
+  }
+  if (actionType === "markReminderRead") {
+    openReminderMarkDialog(button);
+    return true;
+  }
+  if (actionType === "confirmReminderMark") {
+    if (confirmReminderMark()) showToast("待办标记已保存。");
+    return true;
+  }
+  if (actionType === "addBranchAttachment") {
+    if (createCustomAttachmentRow(button)) showToast("已新增一行自定义附件，可直接修改名称或上传文件。");
+    return true;
+  }
+  if (actionType === "toggleBudgetNameSelect") {
+    toggleBudgetNameSelect(button);
+    return true;
+  }
+  if (actionType === "openArchiveMaterialPool") {
+    openArchiveMaterialDialog();
+    return true;
+  }
+  if (actionType === "loadArchiveMaterialChecklist") {
+    openArchiveMaterialChecklistDialog(button);
+    return true;
+  }
+  if (actionType === "confirmArchiveMaterialChecklist") {
+    return confirmArchiveMaterialChecklist();
   }
   if (actionType === "applicationDetail") {
     openApplicationReadonlyDetail(button.closest("#manage") ? "manage" : state.screen || "applyWizard");
@@ -3938,6 +5370,18 @@ function handleDirectDetailAction(button) {
     prepareFundPoolDetail(button);
     openDetail("fundPoolDetail");
     showToast("经费信息维护已打开。");
+    return true;
+  }
+  if (actionType === "fundLinkedProjects") {
+    openFundLinkedProjects(button);
+    showToast("关联项目已打开。");
+    return true;
+  }
+  if (actionType === "openLinkedProjectMenu") {
+    closeDetail();
+    switchScreen("manage");
+    setManageTab(button.dataset.targetTab || "processApproval");
+    showToast("已跳转到项目对应菜单。");
     return true;
   }
   if (actionType === "pinRow") {
@@ -4001,8 +5445,7 @@ function handleDirectDetailAction(button) {
     return true;
   }
   if (actionType === "confirmProjectAttachmentUpload") {
-    closeDetail();
-    showToast("项目附件已上传。");
+    confirmProjectAttachmentUpload();
     return true;
   }
   const detailActions = new Set([
@@ -4095,7 +5538,8 @@ function createAdvancedFilter(field) {
     label.appendChild(select);
   } else {
     const input = document.createElement("input");
-    input.type = "search";
+    input.type = field.type || "search";
+    if (field.value) input.value = field.value;
     input.placeholder = field.placeholder || `输入${field.label}`;
     label.appendChild(input);
   }
@@ -4211,6 +5655,30 @@ function bindDirectShortcuts() {
       showToast("已打开新建立项。");
     });
   });
+  const fundPool = $("#fundPool");
+  if (fundPool && fundPool.dataset.directBound !== "true") {
+    fundPool.dataset.directBound = "true";
+    fundPool.addEventListener("click", (event) => {
+      const action = event.target.closest(".fund-pool-card [data-action], .fund-pool-table [data-action], .fund-pool-metrics [data-action]");
+      if (!action || !fundPool.contains(action)) return;
+      const actionType = action.dataset.action;
+      if (!["fundPoolDetail", "fundLinkedProjects", "removeRepeatRow"].includes(actionType)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (actionType === "fundPoolDetail") {
+        prepareFundPoolDetail(action);
+        openDetail("fundPoolDetail");
+        showToast("经费信息维护已打开。");
+        return;
+      }
+      if (actionType === "fundLinkedProjects") {
+        openFundLinkedProjects(action);
+        showToast("关联项目已打开。");
+        return;
+      }
+      if (removeRepeatRow(action)) showToast("已删除当前行。");
+    });
+  }
   const applicationFlowSubmit = $("#applicationFlowSubmit");
   if (applicationFlowSubmit && applicationFlowSubmit.dataset.directBound !== "true") {
     applicationFlowSubmit.dataset.directBound = "true";
@@ -4387,6 +5855,7 @@ function setManageTab(tab) {
     processImplement: "实施",
     processTrial: "试运行",
     processAcceptance: "验收",
+    processCityAcceptance: "市级验收",
     processRefund: "退履约保金",
     processArchive: "归档",
     overview: "项目详情",
@@ -4409,6 +5878,7 @@ function setManageTab(tab) {
     processImplement: processNodeData.processImplement.hero,
     processTrial: processNodeData.processTrial.hero,
     processAcceptance: processNodeData.processAcceptance.hero,
+    processCityAcceptance: processNodeData.processCityAcceptance.hero,
     processRefund: processNodeData.processRefund.hero,
     processArchive: processNodeData.processArchive.hero,
     overview: ["项目详情", "查看单个项目从申报到归档的完整档案", "当前阶段：立项", "材料：缺 1 项"],
@@ -4648,6 +6118,7 @@ function renderTemplates() {
     if (type === "实施") return "icon-progress.png";
     if (type === "试运行") return "icon-calendar.png";
     if (type === "验收") return "icon-shield.png";
+    if (type === "市级验收") return "icon-material.png";
     if (type === "退履约保金") return "icon-database.png";
     if (type === "归档") return "icon-database.png";
     return "icon-template.png";
@@ -4715,6 +6186,7 @@ function openCalendarEvent(type) {
 
 function bindEvents() {
   bindDirectShortcuts();
+  bindProjectAttachmentUploadButtons();
 
   $("#avatarButton").addEventListener("click", (event) => {
     event.stopPropagation();
@@ -4738,40 +6210,18 @@ function bindEvents() {
     if (!event.target.closest(".user-menu")) closeAvatarMenu();
   });
 
+  document.body.addEventListener("change", (event) => {
+    const uploadInput = event.target.closest("input[data-project-upload-input]");
+    if (uploadInput) {
+      handleProjectUploadInput(uploadInput);
+    }
+  });
+
   document.body.addEventListener("click", (event) => {
     if (event.target.closest("[data-close-detail]")) {
       closeDetail();
       return;
     }
-
-    const useDepartmentTrigger = event.target.closest("[data-action='toggleUseDepartmentSelect']");
-    if (useDepartmentTrigger) {
-      event.preventDefault();
-      event.stopPropagation();
-      const field = useDepartmentTrigger.closest("[data-multi-select='useDepartment']");
-      const willOpen = !field.classList.contains("is-open");
-      closeUseDepartmentSelect(field);
-      field.classList.toggle("is-open", willOpen);
-      useDepartmentTrigger.setAttribute("aria-expanded", String(willOpen));
-      return;
-    }
-
-    const useDepartmentOption = event.target.closest("[data-multi-select='useDepartment'] input[type='checkbox']");
-    if (useDepartmentOption) {
-      const field = useDepartmentOption.closest("[data-multi-select='useDepartment']");
-      const allOption = field.querySelector("input[value='全校']");
-      if (useDepartmentOption.value === "全校" && useDepartmentOption.checked) {
-        field.querySelectorAll("input[type='checkbox']").forEach((input) => {
-          if (input !== useDepartmentOption) input.checked = false;
-        });
-      } else if (useDepartmentOption.checked && allOption) {
-        allOption.checked = false;
-      }
-      updateUseDepartmentTrigger(field);
-      return;
-    }
-
-    if (!event.target.closest("[data-multi-select='useDepartment']")) closeUseDepartmentSelect();
 
     const approvalDecision = event.target.closest("[data-approval-result]");
     if (approvalDecision) {
@@ -4832,6 +6282,15 @@ function bindEvents() {
       event.preventDefault();
       event.stopPropagation();
       if (pinAdminRow(pinButton)) showToast(pinButton.classList.contains("is-active") ? "项目已置顶。" : "已取消置顶。");
+      return;
+    }
+
+    const processSummary = event.target.closest("[data-process-summary]");
+    if (processSummary) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (state.manageTab === "processReview") filterApplicationLibrarySummary(processSummary);
+      else filterProcessSummary(processSummary);
       return;
     }
 
@@ -4899,6 +6358,14 @@ function bindEvents() {
       return;
     }
 
+    const initiationStageStep = event.target.closest("[data-initiation-stage]");
+    if (initiationStageStep) {
+      event.preventDefault();
+      event.stopPropagation();
+      selectInitiationStageSnapshot(initiationStageStep.dataset.initiationStage);
+      return;
+    }
+
     if (event.target.closest("#wizardNext")) {
       setWizardStep(state.wizardStep + 1);
       showToast("已进入下一步。");
@@ -4910,17 +6377,27 @@ function bindEvents() {
       return;
     }
 
-    const applicationSectionCollapse = event.target.closest(".application-section-collapse");
-    if (applicationSectionCollapse) {
-      event.preventDefault();
-      event.stopPropagation();
+	    const applicationSectionCollapse = event.target.closest(".application-section-collapse");
+	    if (applicationSectionCollapse) {
+	      event.preventDefault();
+	      event.stopPropagation();
       if (toggleApplicationSection(applicationSectionCollapse)) {
         showToast(applicationSectionCollapse.closest(".wizard-pane")?.classList.contains("is-collapsed") ? "已收起该模块。" : "已展开该模块。");
       }
-      return;
-    }
+	      return;
+	    }
 
-    const applicationSectionHead = event.target.closest(".application-section-head");
+	    const initiationStageGroupHead = event.target.closest(".initiation-stage-group-head");
+	    if (initiationStageGroupHead && initiationStageGroupHead.closest("#initiationFormPanel")) {
+	      event.preventDefault();
+	      event.stopPropagation();
+	      if (toggleInitiationStageGroup(initiationStageGroupHead)) {
+	        showToast(initiationStageGroupHead.getAttribute("aria-expanded") === "false" ? "已收起该阶段。" : "已展开该阶段。");
+	      }
+	      return;
+	    }
+
+	    const applicationSectionHead = event.target.closest(".application-section-head");
     if (applicationSectionHead && !event.target.closest(".application-summary-actions [data-action]")) {
       event.preventDefault();
       event.stopPropagation();
@@ -5059,6 +6536,10 @@ function bindEvents() {
         openApplyWizardScreen();
         return;
       }
+      if (action.dataset.action === "toggleBudgetNameSelect") {
+        toggleBudgetNameSelect(action);
+        return;
+      }
       if (action.dataset.action === "openApplicationForm") {
         openApplicationForm(action.dataset.applicationMode || "new");
         showToast("已打开申报弹窗。");
@@ -5075,6 +6556,18 @@ function bindEvents() {
       }
       if (action.dataset.action === "advanceInitiationFlow") {
         advanceInitiationFlow();
+        return;
+      }
+      if (action.dataset.action === "nextAcceptanceStep") {
+        advanceAcceptanceStep();
+        return;
+      }
+      if (action.dataset.action === "returnProject") {
+        showToast("已记录退回修改意见。");
+        return;
+      }
+      if (action.dataset.action === "rejectAcceptance") {
+        showToast("已记录不同意意见。");
         return;
       }
       if (action.dataset.action === "batchProcess") {
@@ -5095,9 +6588,20 @@ function bindEvents() {
         showToast("已打开项目附件上传。");
         return;
       }
+      if (action.dataset.action === "addSectionAttachment") {
+        if (createCustomAttachmentRow(action)) showToast("已新增一行自定义附件，可直接修改名称或上传文件。");
+        return;
+      }
+      if (action.dataset.action === "loadArchiveMaterialChecklist") {
+        openArchiveMaterialChecklistDialog(action);
+        return;
+      }
+      if (action.dataset.action === "confirmArchiveMaterialChecklist") {
+        confirmArchiveMaterialChecklist();
+        return;
+      }
       if (action.dataset.action === "confirmProjectAttachmentUpload") {
-        closeDetail();
-        showToast("项目附件已上传。");
+        confirmProjectAttachmentUpload();
         return;
       }
       if (action.dataset.action === "addPaymentRecord") {
@@ -5230,6 +6734,18 @@ function bindEvents() {
         showToast("经费信息维护已打开。");
         return;
       }
+      if (action.dataset.action === "fundLinkedProjects") {
+        openFundLinkedProjects(action);
+        showToast("关联项目已打开。");
+        return;
+      }
+      if (action.dataset.action === "openLinkedProjectMenu") {
+        closeDetail();
+        switchScreen("manage");
+        setManageTab(action.dataset.targetTab || "processApproval");
+        showToast("已跳转到项目对应菜单。");
+        return;
+      }
       if (action.dataset.action === "downloadChart") {
         openChartDownloadPreview(action);
         return;
@@ -5239,10 +6755,44 @@ function bindEvents() {
         return;
       }
       if (action.dataset.action === "markReminderRead") {
-        const row = action.closest(".reminder-table > div, .reminder-card");
-        row?.classList.add("is-read");
-        action.textContent = "已标记";
-        showToast("已标记该提醒。");
+        openReminderMarkDialog(action);
+        showToast("已打开待办标记。");
+        return;
+      }
+      if (action.dataset.action === "confirmReminderMark") {
+        if (confirmReminderMark()) showToast("待办标记已保存。");
+        return;
+      }
+      if (action.dataset.action === "removePaymentRecord") {
+        if (removePaymentRecordRow(action)) showToast("付款记录已删除。");
+        return;
+      }
+      if (action.dataset.action === "returnProject") {
+        showToast("已记录退回修改意见。");
+        return;
+      }
+      if (action.dataset.action === "rejectAcceptance") {
+        showToast("已记录不同意意见。");
+        return;
+      }
+      if (action.dataset.action === "addBranchAttachment") {
+        if (createCustomAttachmentRow(action)) showToast("已新增一行自定义附件，可直接修改名称或上传文件。");
+        return;
+      }
+      if (action.dataset.action === "toggleBudgetNameSelect") {
+        toggleBudgetNameSelect(action);
+        return;
+      }
+      if (action.dataset.action === "openArchiveMaterialPool") {
+        openArchiveMaterialDialog();
+        return;
+      }
+      if (action.dataset.action === "loadArchiveMaterialChecklist") {
+        openArchiveMaterialChecklistDialog(action);
+        return;
+      }
+      if (action.dataset.action === "confirmArchiveMaterialChecklist") {
+        confirmArchiveMaterialChecklist();
         return;
       }
       const detailActions = new Set([
@@ -5421,6 +6971,15 @@ function bindEvents() {
     filterMyProjects();
   });
   $("#initiationUseLibrary")?.addEventListener("change", toggleInitiationLibraryMode);
+  $$("input[name='initiationUseLibrary']").forEach((input) => input.addEventListener("change", toggleInitiationLibraryMode));
+  $("#applicationBudgetInput")?.addEventListener("input", () => {
+    state.applicationBudgetAmount = null;
+    renderApplicationFlow();
+  });
+  $("#applicationBudgetInput")?.addEventListener("change", () => {
+    state.applicationBudgetAmount = null;
+    renderApplicationFlow();
+  });
   $("#myProjectPageSize").addEventListener("change", (event) => {
     state.myProjectPageSize = Number(event.currentTarget.value) || 5;
     state.myProjectPage = 1;
@@ -5477,6 +7036,9 @@ function init() {
   renderTemplates();
   placeAdminListActions();
   setupAdvancedFilters();
+  renderApplicationBudgetHint();
+  syncTableSequenceNumbers();
+  styleRequiredAsterisks();
   bindEvents();
   setMode("applicant", "portal");
 }

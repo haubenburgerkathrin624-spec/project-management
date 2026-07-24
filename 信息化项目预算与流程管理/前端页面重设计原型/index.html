@@ -4,8 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>信息化项目预算与流程管理系统</title>
-    <meta name="prototype-version" content="V2.1.1" />
-    <link rel="stylesheet" href="./styles.css?v=20260720-v211-flow" />
+    <meta name="prototype-version" content="V2.3.7" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23176bff'/%3E%3Cpath d='M18 34h28M22 24h20M22 44h14' stroke='white' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./styles.css?v=20260724-v238-table-alignment" />
   </head>
   <body data-mode="applicant" data-screen="portal">
     <div class="app">
@@ -17,7 +18,7 @@
           <span id="navEyebrow">办事大厅</span>
           <strong>信息化项目管理</strong>
           <small id="navTitle">办事大厅</small>
-          <em class="version-pill">V2.1.1</em>
+          <em class="version-pill">V2.3.7</em>
         </div>
 
         <nav class="nav-list applicant-nav">
@@ -214,8 +215,8 @@
                   <img src="./assets/icon-calendar.png" alt="" />
                   <div>
                     <span>材料通知</span>
-                    <strong>申报材料模板与预算口径已更新</strong>
-                    <p>项目申报书、预算测算表、采购论证和归档清单已按新口径发布。</p>
+                    <strong>申报材料模板与预算已更新</strong>
+                    <p>项目申报书、预算测算表、采购论证和归档清单已按新发布。</p>
                   </div>
                   <time>06-28<b class="notice-state read">已读</b></time>
                 </article>
@@ -268,7 +269,7 @@
           <section class="panel notice-center-panel">
             <div class="panel-head">
               <h2>通知公告 <span>12</span></h2>
-              <button class="ghost-btn" type="button" data-action="readNotice">发布口径</button>
+              <button class="ghost-btn" type="button" data-action="readNotice">发布</button>
             </div>
             <div class="notice-center-filters">
               <label><span>关键词</span><input type="search" placeholder="通知标题、材料名称、项目节点" /></label>
@@ -293,8 +294,8 @@
                 <img src="./assets/icon-calendar.png" alt="" />
                 <div>
                   <span>材料通知</span>
-                  <strong>申报材料模板与预算口径已更新</strong>
-                  <p>项目申报书、预算测算表、采购论证和归档清单已按新口径发布。</p>
+                  <strong>申报材料模板与预算已更新</strong>
+                  <p>项目申报书、预算测算表、采购论证和归档清单已按新发布。</p>
                 </div>
                 <time>2026-06-28</time>
                 <b class="notice-state read">已读</b>
@@ -341,7 +342,7 @@
             <div class="todo-center-filters">
               <label><span>关键词</span><input type="search" placeholder="项目名称、材料名称、节点" /></label>
               <label><span>待办类型</span><select><option>全部</option><option>补交材料</option><option>退回修改</option><option>验收申请</option></select></label>
-              <label><span>截止时间</span><select><option>全部</option><option>今日到期</option><option>7 天内</option><option>已逾期</option></select></label>
+              <label><span>截止时间</span><input type="date" value="2026-07-08" /></label>
               <label><span>处理状态</span><select><option>未处理</option><option>已处理</option></select></label>
               <button class="primary-btn" type="button" data-action="searchList">查询</button>
             </div>
@@ -424,7 +425,7 @@
                 <label><span>申报部门</span><input type="search" placeholder="输入部门" /></label>
                 <label><span>申报人</span><input type="search" placeholder="输入姓名" /></label>
                 <label><span>申报时间</span><input type="text" placeholder="开始日期 ~ 结束日期" /></label>
-                <label><span>当前阶段</span><select><option>全部</option><option>申报</option><option>立项</option><option>采购</option><option>实施</option><option>试运行</option><option>验收</option><option>退履约保金</option><option>归档</option></select></label>
+                <label><span>当前阶段</span><select><option>全部</option><option>申报</option><option>立项</option><option>采购</option><option>实施</option><option>试运行</option><option>验收</option><option>市级验收</option><option>退履约保金</option><option>归档</option></select></label>
                 <label><span>材料状态</span><select><option>全部</option><option>缺材料</option><option>已齐</option><option>待确认</option></select></label>
               </div>
               <div class="progress-query-actions">
@@ -505,7 +506,7 @@
                     <span>退履约保金</span>
                     <span>归档</span>
                   </div>
-                  <p>预算测算表被退回，需要按年度口径补充资金来源。</p>
+                  <p>预算测算表被退回，需要按年度补充资金来源。</p>
                 </div>
                 <div class="progress-project-side">
                   <span class="status amber">退回修改</span>
@@ -570,6 +571,7 @@
               <button type="button" data-action="applicationStatusFilter" data-application-status="submitted">已提交 3</button>
               <button type="button" data-action="applicationStatusFilter" data-application-status="returned">退回修改 1</button>
               <button type="button" data-action="applicationStatusFilter" data-application-status="stored">已入库 2</button>
+              <button type="button" data-action="applicationStatusFilter" data-application-status="linked">已出库 1</button>
               <span class="application-summary-actions">
                 <button class="ghost-btn" type="button" data-action="exportReport">导出</button>
                 <button class="primary-btn" type="button" data-action="openApplicationForm" data-application-mode="new">＋ 新增申报</button>
@@ -578,7 +580,7 @@
             <div class="admin-table application-table application-list-table">
               <div class="admin-table-row admin-table-head"><span>申报编号</span><span>项目名称</span><span>申报部门</span><span>项目类型</span><span>申报日期</span><span>申报状态</span><span>入库状态</span><span>入库编号</span><span>操作</span></div>
               <div class="admin-table-row" data-application-status="submitted"><span>SB2026001</span><strong>网络安全态势感知平台</strong><span>信息化办公室</span><span>网络安全</span><span>2026-06-20</span><span><b class="admin-badge blue">已提交</b></span><span><b class="admin-badge">未入库</b></span><span>-</span><span class="row-actions"><button type="button" data-action="editApplication">编辑</button><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
-              <div class="admin-table-row" data-application-status="stored"><span>SB2026002</span><strong>统一身份认证平台升级</strong><span>信息化办公室</span><span>软件平台</span><span>2026-05-18</span><span><b class="admin-badge green">已入库</b></span><span><b class="admin-badge green">已入库</b></span><span>XXH2026002</span><span class="row-actions"><button type="button" data-action="editApplication">编辑</button><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
+              <div class="admin-table-row" data-application-status="stored linked"><span>SB2026002</span><strong>统一身份认证平台升级</strong><span>信息化办公室</span><span>软件平台</span><span>2026-05-18</span><span><b class="admin-badge green">已入库</b></span><span><b class="admin-badge green">已出库</b></span><span>XXH2026002</span><span class="row-actions"><button type="button" data-action="editApplication">编辑</button><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
               <div class="admin-table-row" data-application-status="returned"><span>SB2026003</span><strong>数据备份与容灾扩容</strong><span>网络中心</span><span>硬件设备</span><span>2026-06-12</span><span><b class="admin-badge amber">退回修改</b></span><span><b class="admin-badge">未入库</b></span><span>-</span><span class="row-actions"><button type="button" data-action="editApplication">编辑</button><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
               <div class="admin-table-row" data-application-status="draft"><span>SB2026004</span><strong>一站式网上办事大厅扩展</strong><span>教务处</span><span>软件平台</span><span>2026-06-08</span><span><b class="admin-badge">草稿</b></span><span><b class="admin-badge">未入库</b></span><span>-</span><span class="row-actions"><button type="button" data-action="editApplication">编辑</button><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
             </div>
@@ -588,68 +590,66 @@
 
         <section class="screen" id="applicationFormPage">
           <section class="panel form-panel single-page-application application-form-panel" id="applicationFormPanel">
-            <div class="application-page-toolbar">
-              <button class="ghost-btn" type="button" data-action="backToApplicationList">← 返回申报列表</button>
-            </div>
+            <section class="process-form-header process-form-header-application">
+              <div class="process-form-hero">
+                <div class="process-form-copy">
+                  <h1>项目申报</h1>
+                  <p class="process-form-serial">流水号：SB2026001</p>
+                </div>
+                <div class="process-form-meta">
+                  <button class="ghost-btn" type="button" data-action="backToApplicationList">返回</button>
+                </div>
+              </div>
 
-            <section class="application-flow-card" aria-label="申报流程节点">
-              <div class="application-flow-head">
-                <div><span>流程节点</span></div>
-                <em id="applicationFlowCurrent">当前：申请人申报</em>
-              </div>
-              <div class="application-flow-track" id="applicationFlowTrack">
-                <div class="application-flow-step is-current" data-application-stage="0"><b>1</b><span>申请人申报</span></div>
-                <div class="application-flow-step" data-application-stage="1"><b>2</b><span>所在部门审核</span></div>
-                <div class="application-flow-step" data-application-stage="2"><b>3</b><span>信息中心审核</span></div>
-                <div class="application-flow-step" data-application-stage="3"><b>4</b><span>是否入库</span></div>
-              </div>
+              <section class="application-flow-card" aria-label="申报流程节点">
+                <div class="application-flow-head">
+                  <div></div>
+                  <em id="applicationFlowCurrent" class="is-hidden">项目申报</em>
+                </div>
+                <div class="application-flow-track" id="applicationFlowTrack">
+                  <div class="application-flow-step is-current" data-application-stage="0"><b>1</b><span>项目申报</span></div>
+                  <div class="application-flow-step" data-application-stage="1"><b>2</b><span>网信办审核</span></div>
+                  <div class="application-flow-step" data-application-stage="2"><b>3</b><span>校级审核</span></div>
+                  <div class="application-flow-step" data-application-stage="3"><b>4</b><span>进入项目库</span></div>
+                </div>
+              </section>
             </section>
 
             <section class="wizard-pane is-active" data-wizard-panel="0">
-              <div class="panel-head compact-head application-section-head"><h2>基础信息</h2><button class="application-section-collapse" type="button" aria-label="收起基础信息">⌃</button></div>
+              <div class="panel-head compact-head application-section-head"><h2>项目信息</h2><button class="application-section-collapse" type="button" aria-label="收起项目信息">⌃</button></div>
               <div class="application-section-body">
                 <div class="form-grid form-grid-3 application-form-fields">
                   <label><span>* 项目名称</span><input value="网络安全态势感知平台" /></label>
                   <label><span>* 申报部门</span><select><option>信息化办公室</option><option>教务处</option><option>图文信息中心</option></select></label>
                   <label><span>* 归口部门</span><select><option>信息化办公室</option><option>网络中心</option></select></label>
                   <label><span>建设类型</span><select><option>软件平台</option><option>硬件设备</option><option>网络安全</option><option>集成服务</option></select></label>
-                  <label class="multi-select-field" data-multi-select="useDepartment">
-                    <span>使用部门</span>
-                    <button class="multi-select-trigger" type="button" data-action="toggleUseDepartmentSelect" aria-expanded="false">全校</button>
-                    <div class="multi-select-menu" role="group" aria-label="选择使用部门">
-                      <label><input type="checkbox" value="全校" checked /> 全校</label>
-                      <label><input type="checkbox" value="信息化办公室" /> 信息化办公室</label>
-                      <label><input type="checkbox" value="教务处" /> 教务处</label>
-                      <label><input type="checkbox" value="网络中心" /> 网络中心</label>
-                      <label><input type="checkbox" value="图文信息中心" /> 图文信息中心</label>
-                    </div>
-                  </label>
+                  <label><span>使用部门</span><select><option>全校</option><option>信息化办公室</option><option>教务处</option><option>网络中心</option><option>图文信息中心</option></select></label>
                   <label><span>申报人</span><input value="张老师" /></label>
                 </div>
               </div>
             </section>
 
             <section class="wizard-pane is-active application-budget-pane" data-wizard-panel="2">
-              <div class="panel-head compact-head application-section-head"><h2>申报预算口径</h2><button class="application-section-collapse" type="button" aria-label="收起申报预算口径">⌃</button></div>
+              <div class="panel-head compact-head application-section-head"><h2>申报预算</h2><button class="application-section-collapse" type="button" aria-label="收起申报预算">⌃</button></div>
               <div class="application-section-body">
                 <div class="form-grid form-grid-3 application-form-fields">
-                  <label><span>* 申报预算（元）</span><input value="860000" /></label>
+                  <label><span>* 申报预算（元）</span><input id="applicationBudgetInput" value="860000" /></label>
+                  <label><span>* 预算年度</span><select><option>2026</option><option>2027</option><option>2026-2027</option></select></label>
                   <label><span>经费来源</span><select><option>信息化建设专项</option><option>网络安全与数据治理</option><option>基础设施更新预算</option><option>部门自筹</option><option>待确认</option></select></label>
-                  <label><span>费用说明</span><input value="包含平台授权、实施服务和日志接入" /></label>
+                  <label class="application-expense-note"><span>费用说明</span><textarea></textarea></label>
                 </div>
+                <p class="application-budget-hint is-hidden" id="applicationBudgetHint"></p>
               </div>
             </section>
 
             <section class="wizard-pane is-active" data-wizard-panel="3">
               <div class="panel-head compact-head application-section-head"><h2>申报材料</h2><button class="application-section-collapse" type="button" aria-label="收起申报材料">⌃</button></div>
               <div class="application-section-body">
-                <div class="mini-head attachment-head"><h3>申报材料</h3></div>
                 <div class="attachment-check-table application-upload-table" id="applicationAttachmentTable">
-                  <div><span>附件名称</span><span>材料清单</span><span>是否必填</span><span>当前状态</span><span>操作</span></div>
-                  <div><strong>项目申报书</strong><span>项目基本情况、建设目标、预算测算</span><span>必填</span><em>已上传</em><span class="attach-actions"><button type="button" data-action="uploadProjectAttachment">重新上传</button><button type="button" data-action="previewMaterial">查看</button><button type="button" data-action="removeAttachment">删除</button></span></div>
-                  <div><strong>预算测算表</strong><span>测算依据、费用构成、经费来源说明</span><span>按需</span><em>已上传</em><span class="attach-actions"><button type="button" data-action="uploadProjectAttachment">重新上传</button><button type="button" data-action="previewMaterial">查看</button><button type="button" data-action="removeAttachment">删除</button></span></div>
-                  <div><strong>现状问题说明</strong><span>业务现状、问题说明、参考材料</span><span>选填</span><em>已上传</em><span class="attach-actions"><button type="button" data-action="uploadProjectAttachment">重新上传</button><button type="button" data-action="previewMaterial">查看</button><button type="button" data-action="removeAttachment">删除</button></span></div>
-                  <div><strong>其他附件</strong><span>补充说明、截图、佐证材料</span><span>选填</span><em>可多选</em><span class="attach-actions"><button type="button" data-action="uploadProjectAttachment">＋ 添加附件</button></span></div>
+                  <div><span>附件名称</span><span>已传附件</span><span>是否必填</span><span>当前状态</span><span>操作</span></div>
+                  <div><strong>项目申报书</strong><span class="uploaded-attachment-list"><a href="javascript:void(0)" data-action="previewMaterial">信息化项目申报书.pdf</a></span><span>必填</span><em>已上传 1 个</em><span class="attach-actions"><button type="button" data-action="uploadProjectAttachment">重新上传</button><button type="button" data-action="previewMaterial">查看</button><button type="button" data-action="removeAttachment">删除</button></span></div>
+                  <div><strong>预算测算表</strong><span class="uploaded-attachment-list"><a href="javascript:void(0)" data-action="previewMaterial">预算测算明细表.xlsx</a></span><span>按需</span><em>已上传 1 个</em><span class="attach-actions"><button type="button" data-action="uploadProjectAttachment">重新上传</button><button type="button" data-action="previewMaterial">查看</button><button type="button" data-action="removeAttachment">删除</button></span></div>
+                  <div><strong>现状问题说明</strong><span class="uploaded-attachment-list"><a href="javascript:void(0)" data-action="previewMaterial">现状问题说明.docx</a></span><span>选填</span><em>已上传 1 个</em><span class="attach-actions"><button type="button" data-action="uploadProjectAttachment">重新上传</button><button type="button" data-action="previewMaterial">查看</button><button type="button" data-action="removeAttachment">删除</button></span></div>
                 </div>
               </div>
             </section>
@@ -662,67 +662,82 @@
             </section>
 
             <section class="wizard-pane is-active application-approval-pane" id="applicationApprovalPane">
-              <div class="panel-head compact-head application-section-head"><h2>审批处理</h2><button class="application-section-collapse" type="button" aria-label="收起审批处理">⌃</button></div>
+              <div class="panel-head compact-head application-section-head"><h2>网信办审核</h2><button class="application-section-collapse" type="button" aria-label="收起网信办审核">⌃</button></div>
               <div class="application-section-body">
                 <div class="approval-panel">
-                  <label><span>处理意见</span><textarea id="applicationApprovalOpinion" placeholder="请输入审批意见">材料完整，建议进入下一环节。</textarea></label>
+                  <label class="application-approval-opinion-label"><span>处理意见</span><textarea id="applicationApprovalOpinion" placeholder="请输入审批意见">材料完整，建议进入下一环节。</textarea></label>
                 </div>
               </div>
             </section>
 
             <div class="wizard-actions">
-              <button class="ghost-btn" type="button" data-action="saveDraft" id="applicationSaveDraft">保存草稿</button>
+              <button class="ghost-btn" type="button" data-action="saveDraft" id="applicationSaveDraft">保存</button>
               <button class="ghost-btn application-decision-btn is-hidden" type="button" id="applicationReturnBtn" data-action="advanceApplicationFlow" data-decision-submit="return">退回修改</button>
               <button class="ghost-btn application-decision-btn is-hidden" type="button" id="applicationRejectBtn" data-action="advanceApplicationFlow" data-decision-submit="reject">不同意</button>
-              <button class="primary-btn" type="button" id="applicationFlowSubmit" data-action="advanceApplicationFlow">确认提交</button>
+              <button class="primary-btn" type="button" id="applicationFlowSubmit" data-action="advanceApplicationFlow">提交</button>
             </div>
           </section>
         </section>
 
         <section class="screen" id="initiationFormPage">
           <section class="panel form-panel single-page-application application-form-panel initiation-form-panel" id="initiationFormPanel">
-            <div class="application-page-toolbar">
+            <div class="process-form-toolbar">
               <button class="ghost-btn" type="button" data-action="backToMyProjects">← 返回我的项目</button>
             </div>
-            <section class="application-flow-card" aria-label="立项流程节点">
-              <div class="application-flow-head">
-                <div><span>流程节点</span></div>
-                <em id="initiationFlowCurrent">当前：立项</em>
+            <section class="process-form-header process-form-header-initiation">
+              <div class="process-form-hero">
+                <div class="process-form-copy">
+                  <h1>项目立项申请</h1>
+                  <p>关联入库项目，维护立项、采购、实施、试运行、验收、退履约保金与归档材料。</p>
+                </div>
+                <div class="process-form-meta">
+                  <strong>流水号：LX2026002</strong>
+                </div>
               </div>
-              <div class="application-flow-track initiation-flow-track">
-                <div class="application-flow-step is-current" data-initiation-stage="0"><b>1</b><span>立项</span></div>
-                <div class="application-flow-step" data-initiation-stage="1"><b>2</b><span>采购</span></div>
-                <div class="application-flow-step" data-initiation-stage="2"><b>3</b><span>实施</span></div>
-                <div class="application-flow-step" data-initiation-stage="3"><b>4</b><span>试运行</span></div>
-                <div class="application-flow-step" data-initiation-stage="4"><b>5</b><span>验收</span></div>
-                <div class="application-flow-step" data-initiation-stage="5"><b>6</b><span>退履约保金</span></div>
-                <div class="application-flow-step" data-initiation-stage="6"><b>7</b><span>归档</span></div>
-              </div>
+
+              <section class="application-flow-card" aria-label="立项流程节点">
+                <div class="application-flow-head">
+                  <div></div>
+                  <em id="initiationFlowCurrent" class="is-hidden">立项</em>
+                </div>
+                <div class="application-flow-track initiation-flow-track">
+                  <div class="application-flow-step is-current" data-initiation-stage="0"><b>1</b><span>立项</span></div>
+                  <div class="application-flow-step" data-initiation-stage="1"><b>2</b><span>采购</span></div>
+                  <div class="application-flow-step" data-initiation-stage="2"><b>3</b><span>实施</span></div>
+                  <div class="application-flow-step" data-initiation-stage="3"><b>4</b><span>试运行</span></div>
+                  <div class="application-flow-step" data-initiation-stage="4"><b>5</b><span>验收</span></div>
+                  <div class="application-flow-step" data-initiation-stage="5"><b>6</b><span>退履约保金</span></div>
+                  <div class="application-flow-step" data-initiation-stage="6"><b>7</b><span>归档</span></div>
+                </div>
+              </section>
             </section>
-            <section class="wizard-pane is-active">
+            <div class="initiation-stage-group-head initiation-root-group" id="initiationRootGroupHead" role="button" tabindex="0" aria-expanded="true"><strong>立项</strong><button class="initiation-stage-group-toggle" type="button" aria-label="收起立项">⌃</button></div>
+            <section class="wizard-pane is-active initiation-root-item">
               <div class="panel-head compact-head application-section-head"><h2>立项基础信息</h2><button class="application-section-collapse" type="button" aria-label="收起立项基础信息">⌃</button></div>
               <div class="application-section-body">
                 <div class="form-grid form-grid-3">
-                  <label><span>是否选择已入库项目</span><select id="initiationUseLibrary"><option value="yes">是，关联申报库项目</option><option value="no">否，手工填写立项信息</option></select></label>
-                  <label class="initiation-linked-field"><span>* 关联申报项目</span><select><option>统一身份认证平台升级</option><option>日志审计平台建设</option><option>网络安全态势感知平台</option></select></label>
-                  <label class="initiation-free-field is-hidden"><span>* 项目来源说明</span><input value="非申报库项目，线下确认后补录立项" /></label>
-                  <label><span>项目库编号</span><input value="RK2026002" disabled /></label>
-                  <label><span>关联状态</span><input id="initiationProjectStatus" value="已入库，可发起立项" disabled /></label>
-                  <label><span>项目名称</span><input value="统一身份认证平台升级" /></label>
-                  <label><span>申报部门</span><input value="信息化办公室" /></label>
-                  <label><span>归口部门</span><input value="信息化办公室" /></label>
-                  <label><span>建设类型</span><input value="软件平台" /></label>
-                  <label><span>申报预算</span><input id="initiationBudgetAmount" value="420000 元" /></label>
-                  <label><span>经费编号</span><select><option>XXH-2026-01</option><option>AQZL-2026-02</option><option>JCSS-2026-04</option></select></label>
-                  <label><span>经费名称</span><input value="2026 年信息化建设专项" /></label>
-                  <label><span>立项金额</span><input value="420000 元" /></label>
-                  <label><span>采购方式</span><select><option>校内论证后采购</option><option>公开招标</option><option>单一来源</option><option>框架协议</option></select></label>
-                  <label><span>立项方式</span><select><option>申报库转立项</option><option>直接立项</option><option>补录立项</option></select></label>
-                  <label><span>项目优先级</span><select><option>普通</option><option>重点</option><option>紧急</option></select></label>
+                  <label><span>* 是否选择已入库项目</span><span class="inline-radio-group"><label><input type="radio" name="initiationUseLibrary" value="yes" checked /> 是</label><label><input type="radio" name="initiationUseLibrary" value="no" /> 否</label></span></label>
+                  <label><span>* 是否有资产</span><select><option>无</option><option>有固定资产</option><option>有无形资产</option></select></label>
+                  <label class="initiation-linked-field initiation-library-field"><span>* 入库项目名称</span><div class="multi-project-select is-open" id="initiationLibraryMultiSelect"><div class="multi-project-control"><div class="multi-project-tags" data-library-selected-tags></div><input type="search" placeholder="搜索项目名称 / 编号 / 部门" data-library-search /><button type="button" data-action="toggleLibraryProjectSelect" aria-label="展开入库项目候选">⌄</button></div><div class="multi-project-dropdown" data-library-options></div></div></label>
+                  <label><span>* 项目编号</span><input id="initiationProjectCodes" value="XXH2026002" disabled /></label>
+                  <label><span>* 关联状态</span><input id="initiationProjectStatus" value="已入库，可发起立项" disabled /></label>
+                  <label><span>* 项目名称</span><input id="initiationProjectNames" value="统一身份认证平台升级" /></label>
+                  <label><span>* 申报部门</span><input id="initiationProjectDepartments" value="信息化办公室" /></label>
+                  <label><span>* 归口部门</span><input value="信息化办公室" /></label>
+                  <label><span>* 建设类型</span><input value="软件平台" /></label>
+                  <label><span>* 立项金额</span><input id="initiationBudgetAmount" value="420000 元" /></label>
+                  <label class="budget-multi-field"><span>* 预算名称</span><div class="multi-project-select budget-name-multi-select"><div class="multi-project-control"><div class="multi-project-tags"><button type="button" class="multi-project-tag"><span>2026 年信息化建设专项</span><i aria-hidden="true">×</i></button><button type="button" class="multi-project-tag"><span>网络安全与数据治理</span><i aria-hidden="true">×</i></button></div><input type="search" placeholder="选择预算名称" /><button type="button" data-action="toggleBudgetNameSelect" aria-label="展开预算候选">⌄</button></div><div class="multi-project-dropdown"><label class="multi-project-option is-selected"><input type="checkbox" checked /><span><strong>2026 年信息化建设专项</strong><em>XXH-2026-01 · 信息化办公室</em></span><small>420 万</small></label><label class="multi-project-option is-selected"><input type="checkbox" checked /><span><strong>网络安全与数据治理</strong><em>AQZL-2026-02 · 网络中心</em></span><small>180 万</small></label><label class="multi-project-option"><input type="checkbox" /><span><strong>校园基础设施更新预算</strong><em>JCSS-2026-03 · 后勤处</em></span><small>300 万</small></label></div></div></label>
+                  <label><span>* 预算编号</span><input value="XXH-2026-01、AQZL-2026-02" /></label>
+                  <label class="is-hidden"><span>金额分支</span><select id="initiationAmountLevelSelect"><option value="expert">10 万及以上，专家验收</option><option value="self">10 万以下，自行验收</option></select></label>
+                  <label class="is-hidden"><span>采购方式</span><select><option>校内论证后采购</option><option>公开招标</option><option>单一来源</option><option>框架协议</option></select></label>
+                  <label><span>* 是否市级数字化项目</span><select id="initiationCityProjectSelect"><option value="no">否</option><option value="yes">是</option></select></label>
+                  <label class="is-hidden"><span>* 是否有履约保证金</span><select id="initiationDepositBaseSelect"><option value="yes">是</option><option value="no">否</option></select></label>
+                  <label class="is-hidden"><span>立项方式</span><select><option>申报库转立项</option><option>直接立项</option><option>补录立项</option></select></label>
+                  <label><span>* 项目优先级</span><select><option>普通</option><option>重点</option><option>紧急</option></select></label>
                 </div>
               </div>
             </section>
-            <section class="wizard-pane is-active">
+            <section class="wizard-pane is-active initiation-root-item">
               <div class="panel-head compact-head application-section-head"><h2>立项团队成员</h2><div class="application-summary-actions"><button class="ghost-btn" type="button" data-action="downloadTemplate">模板导入</button><button class="ghost-btn" type="button" data-action="addTeamRole">新增成员</button><button class="application-section-collapse" type="button" aria-label="收起立项团队成员">⌃</button></div></div>
               <div class="application-section-body">
                 <div class="mini-table milestone-table repeat-table repeat-table-team">
@@ -732,32 +747,38 @@
                 </div>
               </div>
             </section>
-            <section class="wizard-pane is-active">
-              <div class="panel-head compact-head application-section-head"><h2>项目计划与后续里程碑</h2><div class="application-summary-actions"><button class="ghost-btn" type="button" data-action="downloadTemplate">模板导入</button><button class="ghost-btn" type="button" data-action="addMilestone">新增里程碑</button><button class="application-section-collapse" type="button" aria-label="收起项目计划与后续里程碑">⌃</button></div></div>
+            <section class="wizard-pane is-active initiation-root-item">
+              <div class="panel-head compact-head application-section-head"><h2>项目计划与里程碑</h2><div class="application-summary-actions"><button class="ghost-btn" type="button" data-action="downloadTemplate">模板导入</button><button class="ghost-btn" type="button" data-action="addMilestone">新增里程碑</button><button class="application-section-collapse" type="button" aria-label="收起项目计划与里程碑">⌃</button></div></div>
               <div class="application-section-body">
                 <div class="mini-table milestone-table repeat-table repeat-table-milestone">
                   <div class="repeat-table-row repeat-table-head"><span>流程节点</span><span>计划时间</span><span>里程碑事项</span><span>责任人</span><span>材料要求</span><span>操作</span></div>
-                  <div class="repeat-table-row"><strong>立项</strong><span>2026-07</span><span>确认立项单和项目编号</span><span>李工</span><span>经费关联确认、立项确认单</span><span class="repeat-actions"><button type="button" data-action="viewDetail">详情</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
+                  <div class="repeat-table-row"><strong>立项</strong><span>2026-07</span><span>确认批复材料和项目编号</span><span>李工</span><span>项目批复材料</span><span class="repeat-actions"><button type="button" data-action="viewDetail">详情</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
                   <div class="repeat-table-row"><strong>采购</strong><span>2026-08</span><span>采购论证与合同签订</span><span>采购办</span><span>采购论证、采购结果、合同文件</span><span class="repeat-actions"><button type="button" data-action="viewDetail">详情</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
                   <div class="repeat-table-row"><strong>实施</strong><span>2026-09 至 2026-10</span><span>系统建设和联调</span><span>王工</span><span>实施计划、会议纪要、测评材料</span><span class="repeat-actions"><button type="button" data-action="viewDetail">详情</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
                   <div class="repeat-table-row"><strong>试运行</strong><span>2026-11</span><span>上线试运行与问题整改</span><span>王工</span><span>启动会、培训、试运行报告</span><span class="repeat-actions"><button type="button" data-action="viewDetail">详情</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
-                  <div class="repeat-table-row"><strong>验收</strong><span>2026-12</span><span>提交验收审批并形成结论</span><span>李工</span><span>验收申请、验收审批表、专家意见、整改记录</span><span class="repeat-actions"><button type="button" data-action="viewDetail">详情</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
-                  <div class="repeat-table-row"><strong>退履约保金</strong><span>2027-01</span><span>确认合同结余与退还条件</span><span>财务处</span><span>退还确认单、无需退还说明</span><span class="repeat-actions"><button type="button" data-action="viewDetail">详情</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
+                  <div class="repeat-table-row"><strong>验收</strong><span>2026-12</span><span>提交验收审批并形成结论，市级项目在本环节补齐材料</span><span>李工</span><span>验收申请、验收审批表、专家意见、整改记录、市级材料</span><span class="repeat-actions"><button type="button" data-action="viewDetail">详情</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
+                  <div class="repeat-table-row"><strong>退履约保金</strong><span>2027-01</span><span>确认履约保证金退还</span><span>财务处</span><span>退保证金凭证</span><span class="repeat-actions"><button type="button" data-action="viewDetail">详情</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
                   <div class="repeat-table-row"><strong>归档</strong><span>2027-01</span><span>生成归档清单并移交</span><span>档案室</span><span>归档移交清单、全流程材料包</span><span class="repeat-actions"><button type="button" data-action="viewDetail">详情</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
                 </div>
               </div>
             </section>
+            <section class="wizard-pane is-active process-upload-pane initiation-root-item is-hidden" id="initiationRootMaterialPane">
+              <div class="panel-head compact-head application-section-head"><h2>立项材料</h2><button class="application-section-collapse" type="button" aria-label="收起立项材料">⌃</button></div>
+              <div class="application-section-body">
+                <div class="attachment-check-table application-upload-table" id="initiationRootMaterialTable"></div>
+              </div>
+            </section>
             <div id="initiationInheritedExtra" aria-label="前序环节信息"></div>
+            <div class="initiation-stage-group-head initiation-current-group is-hidden" id="initiationCurrentGroupHead"><strong>当前环节</strong></div>
+            <div id="initiationProcessExtra" aria-label="当前环节业务信息"></div>
             <section class="wizard-pane is-active process-upload-pane" id="initiationProcessPane">
               <div class="panel-head compact-head application-section-head"><h2 id="initiationProcessTitle">立项材料</h2><button class="application-section-collapse" type="button" aria-label="收起当前环节材料">⌃</button></div>
               <div class="application-section-body">
-                <div class="application-note" id="initiationProcessHint">提交立项后，项目将依次进入采购、实施、试运行、验收、退履约保金和归档。</div>
-                <div id="initiationProcessExtra"></div>
                 <div class="attachment-check-table application-upload-table" id="initiationProcessMaterialTable"></div>
               </div>
             </section>
             <div class="wizard-actions">
-              <button class="ghost-btn" type="button" data-action="saveDraft">保存草稿</button>
+              <button class="ghost-btn" type="button" data-action="saveDraft">保存</button>
               <button class="primary-btn" type="button" data-action="advanceInitiationFlow" id="initiationFlowSubmit">提交立项</button>
             </div>
           </section>
@@ -797,7 +818,7 @@
             <div class="data-table my-project-table">
               <div class="table-row table-head"><span>项目名称</span><span>当前节点</span><span>材料</span><span>下一步</span><span>更新</span><span>操作</span></div>
               <div class="table-row" data-my-project-row data-pending="true" data-bucket="running" data-year="2026" data-status="待立项" data-material="缺材料" data-fund="网络安全与数据治理" data-type="网络安全"><span>网络安全态势感知平台</span><span><b class="pill blue">待立项</b></span><span>缺 1 项</span><span>完善立项材料</span><span>06-28</span><span class="row-actions"><button class="plain-btn" type="button" data-action="fullProcessDetail">详情</button><button class="ghost-btn" type="button" data-action="quickProcess">办理</button><button class="ghost-btn" type="button" data-action="projectProgress">进度</button></span></div>
-              <div class="table-row" data-my-project-row data-pending="true" data-bucket="running" data-year="2026" data-status="待验收" data-material="已齐" data-fund="信息化建设专项" data-type="软件平台"><span>统一身份认证平台升级</span><span><b class="pill blue">待验收</b></span><span>已齐</span><span>提交验收申请</span><span>06-24</span><span class="row-actions"><button class="plain-btn" type="button" data-action="fullProcessDetail">详情</button><button class="primary-btn" type="button" data-action="submitAcceptance">办理</button><button class="ghost-btn" type="button" data-action="projectProgress">进度</button></span></div>
+              <div class="table-row" data-my-project-row data-pending="true" data-bucket="running" data-year="2026" data-status="待验收" data-material="已齐" data-fund="信息化建设专项" data-type="软件平台"><span>统一身份认证平台升级</span><span><b class="pill blue">待验收</b></span><span>已齐</span><span>提交验收审批</span><span>06-24</span><span class="row-actions"><button class="plain-btn" type="button" data-action="fullProcessDetail">详情</button><button class="primary-btn" type="button" data-action="submitAcceptance">办理</button><button class="ghost-btn" type="button" data-action="projectProgress">进度</button></span></div>
               <div class="table-row" data-my-project-row data-pending="true" data-bucket="rejected" data-year="2025" data-status="退回" data-material="需补预算表" data-fund="基础设施更新预算" data-type="硬件设备"><span>数据中心存储扩容</span><span><b class="pill amber">退回</b></span><span>需补预算表</span><span>补充预算说明</span><span>06-18</span><span class="row-actions"><button class="plain-btn" type="button" data-action="fullProcessDetail">详情</button><button class="ghost-btn" type="button" data-action="quickProcess">办理</button><button class="ghost-btn" type="button" data-action="projectProgress">进度</button></span></div>
               <div class="table-row" data-my-project-row data-bucket="running" data-year="2024" data-status="实施中" data-material="已齐" data-fund="信息化建设专项" data-type="集成服务"><span>日志审计平台建设</span><span><b class="pill green">实施中</b></span><span>已齐</span><span>上传阶段报告</span><span>06-12</span><span class="row-actions"><button class="plain-btn" type="button" data-action="fullProcessDetail">详情</button><button class="ghost-btn" type="button" data-action="quickProcess">办理</button><button class="ghost-btn" type="button" data-action="projectProgress">进度</button></span></div>
               <div class="table-row" data-my-project-row data-bucket="done" data-year="2024" data-status="归档" data-material="已齐" data-fund="基础设施更新预算" data-type="集成服务"><span>校园出口链路优化一期</span><span><b class="pill green">已归档</b></span><span>已齐</span><span>全流程已归档</span><span>05-30</span><span class="row-actions"><button class="plain-btn" type="button" data-action="fullProcessDetail">详情</button><button class="ghost-btn" type="button" data-action="projectProgress">进度</button></span></div>
@@ -839,8 +860,6 @@
                 <label><span>申报部门</span><input placeholder="请输入申报部门" /></label>
                 <label><span>负责人</span><input placeholder="请输入负责人" /></label>
                 <label><span>状态</span><select><option>全部</option><option>申报</option><option>立项</option><option>采购</option><option>实施</option><option>试运行</option><option>验收</option><option>退履约保金</option><option>归档</option></select></label>
-                <label><span>进度</span><select><option>全部</option><option>未开始</option><option>进行中</option><option>已完成</option><option>已归档</option></select></label>
-                <label><span>材料</span><select><option>全部</option><option>缺材料</option><option>齐全</option></select></label>
                 <label><span>供应商</span><input placeholder="请输入供应商" /></label>
               </div>
 
@@ -849,18 +868,21 @@
                 <button type="button" data-ledger-filter="pending">待处理 8</button>
                 <button type="button" data-ledger-filter="approval">待立项 12</button>
                 <button type="button" data-ledger-filter="missing">缺材料 5</button>
+                <button type="button" data-ledger-filter="acceptance">待验收 6</button>
+                <button type="button" data-ledger-filter="accepted">已完成验收 4</button>
+                <button type="button" data-ledger-filter="refund">待退履约保证金 3</button>
                 <button type="button" data-ledger-filter="archive">待归档 7</button>
               </div>
 
               <div class="admin-table">
-                <div class="admin-table-row admin-table-head"><span>编号</span><span>项目名称</span><span>申报部门</span><span>负责人</span><button class="sort-head" type="button" data-action="sortColumn" data-sort-key="year">年度 ↕</button><span>状态</span><span>当前阶段</span><button class="sort-head" type="button" data-action="sortColumn" data-sort-key="budget">预算 ↕</button><button class="sort-head" type="button" data-action="sortColumn" data-sort-key="material">材料 ↕</button><span>操作</span></div>
-                <div class="admin-table-row" data-ledger-row data-ledger-bucket="pending approval missing"><span>XXH2026001</span><strong>网络安全态势感知平台</strong><span>信息办</span><span>张工</span><span>2026</span><span><b class="admin-badge blue">待立项</b></span><span>立项确认</span><span>86 万</span><span>缺 1</span><span class="row-actions"><button class="star-btn" type="button" data-action="pinRow" aria-label="置顶项目" aria-pressed="false">☆</button><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="previewMaterial">材料</button></span></div>
-                <div class="admin-table-row" data-ledger-row data-ledger-bucket="pending"><span>XXH2026002</span><strong>统一身份认证平台升级</strong><span>信息办</span><span>李工</span><span>2026</span><span><b class="admin-badge green">建设中</b></span><span>系统开发</span><span>42 万</span><span>齐全</span><span class="row-actions"><button class="star-btn" type="button" data-action="pinRow" aria-label="置顶项目" aria-pressed="false">☆</button><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="previewMaterial">材料</button></span></div>
-                <div class="admin-table-row" data-ledger-row data-ledger-bucket="archive"><span>XXH2024018</span><strong>校园出口链路优化一期</strong><span>网络中心</span><span>陈工</span><span>2024</span><span><b class="admin-badge green">已归档</b></span><span>归档</span><span>118 万</span><span>齐全</span><span class="row-actions"><button class="star-btn" type="button" data-action="pinRow" aria-label="置顶项目" aria-pressed="false">☆</button><button type="button" data-action="fullProcessDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="previewMaterial">材料</button></span></div>
-                <div class="admin-table-row" data-ledger-row data-ledger-bucket="archive"><span>XXH2025008</span><strong>数据备份与容灾扩容一期</strong><span>信息办</span><span>王工</span><span>2025</span><span><b class="admin-badge green">已归档</b></span><span>归档</span><span>58 万</span><span>齐全</span><span class="row-actions"><button class="star-btn" type="button" data-action="pinRow" aria-label="置顶项目" aria-pressed="false">☆</button><button type="button" data-action="fullProcessDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="previewMaterial">材料</button></span></div>
-                <div class="admin-table-row" data-ledger-row data-ledger-bucket="pending missing"><span>XXH2026003</span><strong>数据备份与容灾扩容</strong><span>信息办</span><span>王工</span><span>2026</span><span><b class="admin-badge amber">需完善</b></span><span>材料补正</span><span>58 万</span><span>缺 3</span><span class="row-actions"><button class="star-btn" type="button" data-action="pinRow" aria-label="置顶项目" aria-pressed="false">☆</button><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="previewMaterial">材料</button></span></div>
-                <div class="admin-table-row" data-ledger-row data-ledger-bucket="approval"><span>XXH2027001</span><strong>校园网出口链路优化</strong><span>网络中心</span><span>陈工</span><span>2027</span><span><b class="admin-badge blue">待立项</b></span><span>待立项</span><span>120 万</span><span>齐全</span><span class="row-actions"><button class="star-btn" type="button" data-action="pinRow" aria-label="置顶项目" aria-pressed="false">☆</button><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="viewDetail" data-detail="budgetDetail">经费</button></span></div>
-                <div class="admin-table-row" data-ledger-row data-ledger-bucket="pending"><span>XXH2026005</span><strong>日志审计平台建设</strong><span>信息办</span><span>赵工</span><span>2026</span><span><b class="admin-badge green">已入库</b></span><span>采购论证</span><span>36 万</span><span>齐全</span><span class="row-actions"><button class="star-btn" type="button" data-action="pinRow" aria-label="置顶项目" aria-pressed="false">☆</button><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="viewDetail" data-detail="logDetail">日志</button></span></div>
+                <div class="admin-table-row admin-table-head"><span>编号</span><span>项目名称</span><span>申报部门</span><span>负责人</span><button class="sort-head" type="button" data-action="sortColumn" data-sort-key="year">年度 ↕</button><span>供应商</span><span>状态</span><span>当前阶段</span><button class="sort-head" type="button" data-action="sortColumn" data-sort-key="budget">预算 ↕</button><button class="sort-head" type="button" data-action="sortColumn" data-sort-key="material">材料 ↕</button><span>操作</span></div>
+                <div class="admin-table-row" data-ledger-row data-ledger-bucket="pending approval missing"><span>XXH2026001</span><strong>网络安全态势感知平台</strong><span>信息办</span><span>张工</span><span>2026</span><span>待确认</span><span><b class="admin-badge blue">待立项</b></span><span>立项确认</span><span>86 万</span><span>缺 1</span><span class="row-actions"><button class="star-btn" type="button" data-action="pinRow" aria-label="置顶项目" aria-pressed="false">☆</button><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="previewMaterial">材料</button></span></div>
+                <div class="admin-table-row" data-ledger-row data-ledger-bucket="pending acceptance"><span>XXH2026002</span><strong>统一身份认证平台升级</strong><span>信息办</span><span>李工</span><span>2026</span><span>上海某信息技术有限公司</span><span><b class="admin-badge green">建设中</b></span><span>待验收</span><span>42 万</span><span>齐全</span><span class="row-actions"><button class="star-btn" type="button" data-action="pinRow" aria-label="置顶项目" aria-pressed="false">☆</button><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="previewMaterial">材料</button></span></div>
+                <div class="admin-table-row" data-ledger-row data-ledger-bucket="archive accepted"><span>XXH2024018</span><strong>校园出口链路优化一期</strong><span>网络中心</span><span>陈工</span><span>2024</span><span>上海电院信息服务有限公司</span><span><b class="admin-badge green">已归档</b></span><span>归档</span><span>118 万</span><span>齐全</span><span class="row-actions"><button class="star-btn" type="button" data-action="pinRow" aria-label="置顶项目" aria-pressed="false">☆</button><button type="button" data-action="fullProcessDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="previewMaterial">材料</button></span></div>
+                <div class="admin-table-row" data-ledger-row data-ledger-bucket="archive accepted refund"><span>XXH2025008</span><strong>数据备份与容灾扩容一期</strong><span>信息办</span><span>王工</span><span>2025</span><span>云数智联科技有限公司</span><span><b class="admin-badge green">已完成验收</b></span><span>退履约保金</span><span>58 万</span><span>齐全</span><span class="row-actions"><button class="star-btn" type="button" data-action="pinRow" aria-label="置顶项目" aria-pressed="false">☆</button><button type="button" data-action="fullProcessDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="previewMaterial">材料</button></span></div>
+                <div class="admin-table-row" data-ledger-row data-ledger-bucket="pending missing"><span>XXH2026003</span><strong>数据备份与容灾扩容</strong><span>信息办</span><span>王工</span><span>2026</span><span>待补充</span><span><b class="admin-badge amber">需完善</b></span><span>材料补正</span><span>58 万</span><span>缺 3</span><span class="row-actions"><button class="star-btn" type="button" data-action="pinRow" aria-label="置顶项目" aria-pressed="false">☆</button><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="previewMaterial">材料</button></span></div>
+                <div class="admin-table-row" data-ledger-row data-ledger-bucket="approval"><span>XXH2027001</span><strong>校园网出口链路优化</strong><span>网络中心</span><span>陈工</span><span>2027</span><span>待确认</span><span><b class="admin-badge blue">待立项</b></span><span>待立项</span><span>120 万</span><span>齐全</span><span class="row-actions"><button class="star-btn" type="button" data-action="pinRow" aria-label="置顶项目" aria-pressed="false">☆</button><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="viewDetail" data-detail="budgetDetail">经费</button></span></div>
+                <div class="admin-table-row" data-ledger-row data-ledger-bucket="pending"><span>XXH2026005</span><strong>日志审计平台建设</strong><span>信息办</span><span>赵工</span><span>2026</span><span>上海电信服务有限公司</span><span><b class="admin-badge green">已入库</b></span><span>采购论证</span><span>36 万</span><span>齐全</span><span class="row-actions"><button class="star-btn" type="button" data-action="pinRow" aria-label="置顶项目" aria-pressed="false">☆</button><button type="button" data-action="applicationDetail">详情</button><button type="button" data-action="projectProgress">进度</button><button type="button" data-action="viewDetail" data-detail="logDetail">日志</button></span></div>
               </div>
             </section>
           </div>
@@ -1091,11 +1113,11 @@
                 <div class="admin-head-actions">
                   <button class="ghost-btn" type="button" data-action="fieldConfig">字段</button>
                   <button class="ghost-btn" type="button" data-action="searchList">查询</button>
-                  <button class="primary-btn" type="button" data-action="uploadMaterial">上传资料</button>
+                  <button class="primary-btn" type="button" data-action="uploadMaterial">新增资料模板</button>
                 </div>
               </div>
               <div class="admin-query-panel">
-                <label><span>资料阶段</span><select><option>全部</option><option>申报前</option><option>预算口径</option><option>采购阶段</option><option>试运行</option><option>验收</option><option>归档</option></select></label>
+                <label><span>资料阶段</span><select><option>全部</option><option>申报前</option><option>预算</option><option>采购阶段</option><option>试运行</option><option>验收</option><option>市级验收</option><option>归档</option></select></label>
                 <label><span>资料名称</span><input placeholder="请输入资料名称" /></label>
                 <label><span>资料类型</span><select><option>全部</option><option>参考资料</option><option>下载模板</option><option>填报样例</option></select></label>
                 <label><span>发布状态</span><select><option>全部</option><option>已发布</option><option>待更新</option><option>已下架</option></select></label>
@@ -1111,7 +1133,7 @@
               <div class="admin-table material-admin-table">
                 <div class="admin-table-row admin-table-head"><span>阶段</span><span>资料名称</span><span>类型</span><span>适用对象</span><span>版本</span><span>状态</span><span>更新人</span><span>更新时间</span><span>下载</span><span>操作</span></div>
                 <div class="admin-table-row"><span>申报前</span><strong>信息化项目申报指南</strong><span>参考资料</span><span>申请人</span><span>V3.2</span><span><b class="admin-badge green">已发布</b></span><span>信息办</span><span>2026-07-01</span><span>128</span><span class="row-actions"><button type="button" data-action="previewMaterial">预览</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="downloadTemplate">下载</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
-                <div class="admin-table-row"><span>预算口径</span><strong>预算测算明细表</strong><span>下载模板</span><span>申请人</span><span>V2.1</span><span><b class="admin-badge green">已发布</b></span><span>信息办</span><span>2026-06-28</span><span>96</span><span class="row-actions"><button type="button" data-action="previewMaterial">预览</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="downloadTemplate">下载</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
+                <div class="admin-table-row"><span>预算</span><strong>预算测算明细表</strong><span>下载模板</span><span>申请人</span><span>V2.1</span><span><b class="admin-badge green">已发布</b></span><span>信息办</span><span>2026-06-28</span><span>96</span><span class="row-actions"><button type="button" data-action="previewMaterial">预览</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="downloadTemplate">下载</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
                 <div class="admin-table-row"><span>采购阶段</span><strong>采购论证资料清单</strong><span>参考资料</span><span>申请人</span><span>V1.8</span><span><b class="admin-badge blue">待更新</b></span><span>采购办</span><span>2026-06-20</span><span>54</span><span class="row-actions"><button type="button" data-action="previewMaterial">预览</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="downloadTemplate">下载</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
                 <div class="admin-table-row"><span>试运行</span><strong>试运行报告模板</strong><span>下载模板</span><span>申请人</span><span>V2.4</span><span><b class="admin-badge green">已发布</b></span><span>信息办</span><span>2026-06-18</span><span>72</span><span class="row-actions"><button type="button" data-action="previewMaterial">预览</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="downloadTemplate">下载</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
                 <div class="admin-table-row"><span>验收</span><strong>验收申请报告模板</strong><span>下载模板</span><span>申请人</span><span>V2.0</span><span><b class="admin-badge green">已发布</b></span><span>信息办</span><span>2026-06-18</span><span>64</span><span class="row-actions"><button type="button" data-action="previewMaterial">预览</button><button type="button" data-action="editProject">编辑</button><button type="button" data-action="downloadTemplate">下载</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
@@ -1136,7 +1158,7 @@
               <div class="admin-card-head"><h2>日志</h2><button class="ghost-btn" type="button" data-action="exportReport">导出日志</button></div>
               <div class="admin-log-list">
                 <article><time>2026-06-28 10:30</time><strong>张工补充预算测算表</strong><span>材料状态由“缺失”变为“待确认”</span></article>
-                <article><time>2026-06-24 16:45</time><strong>信息办退回预算说明</strong><span>要求补充年度预算口径</span></article>
+                <article><time>2026-06-24 16:45</time><strong>信息办退回预算说明</strong><span>要求补充年度预算</span></article>
                 <article><time>2026-06-20 09:12</time><strong>李老师确认团队角色</strong><span>项目负责人和归口负责人已配置</span></article>
               </div>
             </section>
@@ -1237,9 +1259,9 @@
           <section class="budget-workbench fund-pool-page">
             <div class="budget-metrics fund-pool-metrics">
               <article><span>年度总经费</span><strong>640 万</strong><em>含专项、基础设施和安全治理</em></article>
-              <article><span>已关联金额</span><strong>312 万</strong><em>已与 9 个项目建立关联</em></article>
-              <article><span>已占用金额</span><strong>248 万</strong><em>已生成正式占用记录</em></article>
-              <article><span>可用余额</span><strong>392 万</strong><em>立项可关联，支持一项目多经费编号</em></article>
+              <article><span>已关联金额</span><strong>350 万</strong><em>已与 9 个项目建立关联</em></article>
+              <article><span>已付款金额</span><strong>286 万</strong><em>按项目付款记录汇总</em></article>
+              <article><span>可用余额</span><strong>290 万</strong><em>总额减已关联金额</em></article>
             </div>
 
             <section class="panel budget-query-card fund-pool-query-card">
@@ -1264,12 +1286,12 @@
                 <button class="primary-btn" type="button" data-action="fundPoolDetail" data-fund-mode="new">＋ 新增经费</button>
               </div>
               <div class="admin-table fund-pool-table">
-                <div class="admin-table-row admin-table-head"><span>序号</span><span>经费名称</span><span>经费编号</span><span>经费来源</span><span>总额</span><span>已关联</span><span>已占用</span><span>可用余额</span><span>状态</span><span>操作</span></div>
-                <div class="admin-table-row"><span>01</span><strong>2026 年信息化建设专项</strong><span>XXH-2026-01</span><span>信息化建设专项</span><span>260 万</span><span>126 万</span><span>104 万</span><span>156 万</span><span><b class="admin-badge green">可用</b></span><span class="row-actions"><button type="button" data-action="fundPoolDetail" data-fund-mode="detail">详情</button><button type="button" data-action="fundPoolDetail" data-fund-mode="edit">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
-                <div class="admin-table-row"><span>02</span><strong>校园基础设施更新预算</strong><span>JCSS-2026-04</span><span>校园基础设施更新预算</span><span>180 万</span><span>104 万</span><span>92 万</span><span>88 万</span><span><b class="admin-badge green">可用</b></span><span class="row-actions"><button type="button" data-action="fundPoolDetail" data-fund-mode="detail">详情</button><button type="button" data-action="fundPoolDetail" data-fund-mode="edit">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
-                <div class="admin-table-row"><span>03</span><strong>网络安全与数据治理</strong><span>AQZL-2026-02</span><span>网络安全与数据治理</span><span>140 万</span><span>64 万</span><span>52 万</span><span>88 万</span><span><b class="admin-badge green">可用</b></span><span class="row-actions"><button type="button" data-action="fundPoolDetail" data-fund-mode="detail">详情</button><button type="button" data-action="fundPoolDetail" data-fund-mode="edit">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
-                <div class="admin-table-row"><span>04</span><strong>年度统筹经费</strong><span>TC-2025-08</span><span>年度统筹经费</span><span>60 万</span><span>18 万</span><span>0 万</span><span>60 万</span><span><b class="admin-badge blue">待启用</b></span><span class="row-actions"><button type="button" data-action="fundPoolDetail" data-fund-mode="detail">详情</button><button type="button" data-action="fundPoolDetail" data-fund-mode="edit">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
-                <div class="admin-table-row"><span>05</span><strong>历史项目结余经费</strong><span>JY-2024-11</span><span>历史项目结余</span><span>38 万</span><span>38 万</span><span>38 万</span><span>0 万</span><span><b class="admin-badge amber">已占用</b></span><span class="row-actions"><button type="button" data-action="fundPoolDetail" data-fund-mode="detail">详情</button><button type="button" data-action="fundPoolDetail" data-fund-mode="edit">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
+                <div class="admin-table-row admin-table-head"><span>序号</span><span>经费名称</span><span>经费编号</span><span>总额</span><span>关联项目数</span><span>已关联</span><span>已付款</span><span>可用余额</span><span>状态</span><span>操作</span></div>
+                <div class="admin-table-row"><span>1</span><strong>2026 年信息化建设专项</strong><span>XXH-2026-01</span><span>260 万</span><span>3 个</span><span>126 万</span><span>104 万</span><span>134 万</span><span><b class="admin-badge green">可用</b></span><span class="row-actions"><button type="button" data-action="fundPoolDetail" data-fund-mode="detail">经费详情</button><button type="button" data-action="fundLinkedProjects">关联项目</button><button type="button" data-action="fundPoolDetail" data-fund-mode="edit">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
+                <div class="admin-table-row"><span>2</span><strong>校园基础设施更新预算</strong><span>JCSS-2026-04</span><span>180 万</span><span>2 个</span><span>104 万</span><span>92 万</span><span>76 万</span><span><b class="admin-badge green">可用</b></span><span class="row-actions"><button type="button" data-action="fundPoolDetail" data-fund-mode="detail">经费详情</button><button type="button" data-action="fundLinkedProjects">关联项目</button><button type="button" data-action="fundPoolDetail" data-fund-mode="edit">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
+                <div class="admin-table-row"><span>3</span><strong>网络安全与数据治理</strong><span>AQZL-2026-02</span><span>140 万</span><span>2 个</span><span>64 万</span><span>52 万</span><span>76 万</span><span><b class="admin-badge green">可用</b></span><span class="row-actions"><button type="button" data-action="fundPoolDetail" data-fund-mode="detail">经费详情</button><button type="button" data-action="fundLinkedProjects">关联项目</button><button type="button" data-action="fundPoolDetail" data-fund-mode="edit">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
+                <div class="admin-table-row"><span>4</span><strong>年度统筹经费</strong><span>TC-2025-08</span><span>60 万</span><span>1 个</span><span>18 万</span><span>0 万</span><span>42 万</span><span><b class="admin-badge blue">待启用</b></span><span class="row-actions"><button type="button" data-action="fundPoolDetail" data-fund-mode="detail">经费详情</button><button type="button" data-action="fundLinkedProjects">关联项目</button><button type="button" data-action="fundPoolDetail" data-fund-mode="edit">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
+                <div class="admin-table-row"><span>5</span><strong>历史项目结余经费</strong><span>JY-2024-11</span><span>38 万</span><span>1 个</span><span>38 万</span><span>38 万</span><span>0 万</span><span><b class="admin-badge amber">已付款</b></span><span class="row-actions"><button type="button" data-action="fundPoolDetail" data-fund-mode="detail">经费详情</button><button type="button" data-action="fundLinkedProjects">关联项目</button><button type="button" data-action="fundPoolDetail" data-fund-mode="edit">编辑</button><button type="button" data-action="removeRepeatRow">删除</button></span></div>
               </div>
             </section>
           </section>
@@ -1288,8 +1310,8 @@
               <div class="reminder-query-grid">
                 <label><span>待办事项</span><input type="search" placeholder="输入项目/事项" /></label>
                 <label><span>提醒类型</span><select><option>全部</option><option>逾期</option><option>材料补正</option><option>待审核</option><option>即将到期</option></select></label>
-                <label><span>项目阶段</span><select><option>全部</option><option>申报</option><option>立项</option><option>采购</option><option>实施</option><option>试运行</option><option>验收</option><option>退履约保金</option><option>归档</option></select></label>
-                <label><span>截止时间</span><select><option>全部</option><option>今日到期</option><option>三天内</option><option>一周内</option><option>已逾期</option></select></label>
+                <label><span>项目阶段</span><select><option>全部</option><option>申报</option><option>立项</option><option>采购</option><option>实施</option><option>试运行</option><option>验收</option><option>市级验收</option><option>退履约保金</option><option>归档</option></select></label>
+                <label><span>截止时间</span><input type="date" value="2026-07-08" /></label>
                 <label><span>责任人</span><input type="search" placeholder="输入责任人" /></label>
                 <label><span>处理状态</span><select><option>待处理</option><option>已提醒</option><option>已完成</option></select></label>
               </div>
@@ -1321,9 +1343,7 @@
           <section class="system-page system-subpage">
             <div class="system-page-head">
               <div>
-                <span>系统管理</span>
                 <h2>角色管理</h2>
-                <p>支持同一用户叠加多个角色，菜单和数据范围按权限合并显示。</p>
               </div>
               <button class="primary-btn" type="button" data-action="roleForm" data-role-mode="new">新增角色</button>
             </div>
@@ -1333,6 +1353,7 @@
                 <label><span>角色类型</span><select><option>全部</option><option>申报人</option><option>项目主管</option><option>领导</option><option>部门领导</option><option>审计查看</option></select></label>
                 <label><span>状态</span><select><option>全部</option><option>启用</option><option>停用</option></select></label>
                 <button class="primary-btn" type="button" data-action="searchList">查询</button>
+                <button class="primary-btn" type="button" data-action="roleForm" data-role-mode="new">新增角色</button>
               </div>
               <div class="system-table role-table">
                 <div><span>角色名称</span><span>数据范围</span><span>主要职责</span><span>状态</span><span>操作</span></div>
@@ -1352,24 +1373,22 @@
           <section class="system-page system-subpage">
             <div class="system-page-head">
               <div>
-                <span>系统管理</span>
                 <h2>流程配置管理</h2>
-                <p>维护信息化项目全流程节点、责任角色、必备材料和提醒规则。</p>
               </div>
               <button class="primary-btn" type="button" data-action="fieldConfig">配置节点</button>
             </div>
             <section class="system-card">
               <div class="system-flow-table">
                 <div><span>序号</span><span>流程节点</span><span>责任角色</span><span>必备材料</span><span>提醒规则</span><span>操作</span></div>
-                <div><b>01</b><strong>申报审核</strong><span>申请人</span><span>项目申报书、建设必要性</span><span>草稿 7 天未提交提醒</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
-                <div><b>02</b><strong>项目申报库</strong><span>信息办管理员</span><span>入库确认文件</span><span>入库结果未确认提醒</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
-                <div><b>03</b><strong>立项</strong><span>项目负责人</span><span>经费关联确认、立项确认单</span><span>经费不足提醒</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
-                <div><b>04</b><strong>采购</strong><span>采购协同人</span><span>采购论证、采购结果、合同</span><span>采购材料缺项提醒</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
-                <div><b>05</b><strong>实施</strong><span>项目负责人</span><span>实施计划、会议纪要、阶段报告</span><span>节点到期前 5 天提醒</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
-                <div><b>06</b><strong>试运行</strong><span>项目负责人</span><span>启动会、培训、试运行报告</span><span>试运行结束前提醒</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
-                <div><b>07</b><strong>验收</strong><span>验收负责人</span><span>验收申请、专家意见、正式报告</span><span>验收申请待办提醒</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
-                <div><b>08</b><strong>退履约保金</strong><span>年度预算员</span><span>退还确认或无需退还说明</span><span>验收通过后自动提醒</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
-                <div><b>09</b><strong>归档</strong><span>档案管理员</span><span>归档移交清单、全过程材料包</span><span>材料缺失提醒</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
+                <div><b>1</b><strong>申报审核</strong><span>申请人</span><span>项目申报书、建设必要性</span><span>草稿 7 天未提交提醒</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
+                <div><b>2</b><strong>项目申报库</strong><span>信息办管理员</span><span>入库确认文件</span><span>入库结果未确认提醒</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
+                <div><b>3</b><strong>立项</strong><span>项目负责人</span><span>经费关联确认、立项确认单</span><span>经费不足提醒</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
+                <div><b>4</b><strong>采购</strong><span>采购协同人</span><span>采购论证、采购结果、合同</span><span>采购材料缺项提醒</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
+                <div><b>5</b><strong>实施</strong><span>项目负责人</span><span>实施计划、会议纪要、阶段报告</span><span>节点到期前 5 天提醒</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
+                <div><b>6</b><strong>试运行</strong><span>项目负责人</span><span>启动会、培训、试运行报告</span><span>试运行结束前提醒</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
+                <div><b>7</b><strong>验收</strong><span>验收负责人</span><span>验收申请、专家意见、正式报告</span><span>验收申请待办提醒</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
+                <div><b>8</b><strong>退履约保金</strong><span>年度预算员</span><span>退保证金凭证</span><span>有履约保证金时触发</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
+                <div><b>10</b><strong>归档</strong><span>档案管理员</span><span>归档移交清单、全过程材料包</span><span>材料缺失提醒</span><span><button type="button" data-action="fieldConfig">配置</button></span></div>
               </div>
             </section>
           </section>
@@ -1379,9 +1398,7 @@
           <section class="system-page system-subpage">
             <div class="system-page-head">
               <div>
-                <span>系统管理</span>
                 <h2>字段表管理</h2>
-                <p>集中维护项目、预算、材料、审核和归档字段，保证列表、表单和导出口径一致。</p>
               </div>
               <button class="primary-btn" type="button" data-action="fieldConfig">新增字段表</button>
             </div>
@@ -1447,7 +1464,7 @@
               <div class="archive-score" id="archiveScore">0%</div>
               <div>
                 <h2 id="archiveProjectTitle">请选择项目</h2>
-                <span id="archiveProjectMeta" class="archive-meta">点击表格“查看”后展示验收、退履约保金和归档预检情况</span>
+                <span id="archiveProjectMeta" class="archive-meta">点击表格“查看”后展示验收、市级验收、退履约保金和归档预检情况</span>
                 <p id="archiveCopy">请选择左侧项目。</p>
               </div>
               <button class="primary-btn" type="button" id="archivePack" data-action="archivePack">生成预检清单</button>
@@ -1471,6 +1488,7 @@
               <button class="chip" type="button" data-prep-filter="implement">实施</button>
               <button class="chip" type="button" data-prep-filter="trial">试运行</button>
               <button class="chip" type="button" data-prep-filter="acceptance">验收</button>
+              <button class="chip" type="button" data-prep-filter="cityAcceptance">市级验收</button>
               <button class="chip" type="button" data-prep-filter="refund">退履约保金</button>
               <button class="chip" type="button" data-prep-filter="archive">归档</button>
             </div>
@@ -1483,10 +1501,10 @@
             <div class="analytics-head">
               <h2>统计分析</h2>
               <div class="analytics-filters">
-                <button type="button">2026-01-01 ~ 2026-12-31</button>
-                <button type="button">全部单位</button>
-                <button type="button">全部项目类型</button>
-                <button type="button">供应商/合同反查</button>
+                <label class="date-range-field"><input type="date" value="2026-01-01" /><span>至</span><input type="date" value="2026-12-31" /></label>
+                <select aria-label="单位筛选"><option>全部单位</option><option>信息化办公室</option><option>教务处</option><option>学生处</option><option>网络中心</option></select>
+                <select aria-label="项目类型筛选"><option>全部项目类型</option><option>应用系统</option><option>基础设施</option><option>网络安全</option><option>数据治理</option></select>
+                <select aria-label="反查类型"><option>供应商/合同反查</option><option>按供应商反查</option><option>按合同编号反查</option><option>按预算编号反查</option></select>
                 <button class="primary-btn" type="button" data-action="exportReport">导出</button>
               </div>
             </div>
@@ -1541,7 +1559,7 @@
                 <div class="chart-insight-list">
                   <span>50-100万区间金额最高，占总投资 26.1%</span>
                   <span>100万以上项目共 16 个，建议重点跟踪预算执行</span>
-                  <span>20-50万项目数量稳定，可按同类采购口径批量论证</span>
+                  <span>20-50万项目数量稳定，可按同类采购批量论证</span>
                 </div>
               </article>
 
@@ -1642,6 +1660,6 @@
     </section>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="./app.js?v=20260716-v210-meeting"></script>
+    <script src="./app.js?v=20260724-v238-table-alignment"></script>
   </body>
 </html>
